@@ -1,0 +1,187 @@
+import { lazy } from 'react'
+import type { AlgorithmModule, ParameterDefinition } from '../../engine/types'
+import { inspectRrt, rrtDefaults, runRrt, type RrtParams, type RrtState } from './rrt'
+
+const parameters: ParameterDefinition[] = [
+    {
+        type: 'number',
+        key: 'workspace',
+        label: 'Workspace size',
+        defaultValue: 10,
+        min: 6,
+        max: 20,
+        step: 1,
+        control: 'slider',
+        description: 'Side length of the 3D sampling cube.',
+    },
+    {
+        type: 'number',
+        key: 'maxIterations',
+        label: 'Maximum iterations',
+        defaultValue: 300,
+        min: 1,
+        max: 600,
+        step: 1,
+        integer: true,
+        control: 'slider',
+        description: 'Maximum number of sampled extensions.',
+    },
+    {
+        type: 'number',
+        key: 'stepSize',
+        label: 'Step size',
+        defaultValue: 0.75,
+        min: 0.1,
+        max: 2,
+        step: 0.05,
+        control: 'slider',
+        description: 'Maximum length of a new tree edge.',
+    },
+    {
+        type: 'number',
+        key: 'goalBias',
+        label: 'Goal bias',
+        defaultValue: 0.14,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        control: 'slider',
+        description: 'Probability of sampling the goal.',
+    },
+    {
+        type: 'number',
+        key: 'goalThreshold',
+        label: 'Goal threshold',
+        defaultValue: 0.85,
+        min: 0.1,
+        max: 2,
+        step: 0.05,
+        control: 'slider',
+        description: 'Distance within which a final goal edge is attempted.',
+    },
+    {
+        type: 'number',
+        key: 'obstacleCount',
+        label: 'Obstacle count',
+        defaultValue: 7,
+        min: 0,
+        max: 18,
+        step: 1,
+        integer: true,
+        control: 'slider',
+    },
+    {
+        type: 'number',
+        key: 'obstacleMin',
+        label: 'Minimum obstacle radius',
+        defaultValue: 0.45,
+        min: 0.2,
+        max: 1.6,
+        step: 0.05,
+    },
+    {
+        type: 'number',
+        key: 'obstacleMax',
+        label: 'Maximum obstacle radius',
+        defaultValue: 1.1,
+        min: 0.2,
+        max: 1.6,
+        step: 0.05,
+    },
+    { type: 'seed', key: 'seed', label: 'Random seed', defaultValue: 12345 },
+]
+
+export const rrtModule: AlgorithmModule<RrtState> = {
+    meta: {
+        id: 'rrt',
+        name: 'Rapidly-exploring Random Tree',
+        shortName: 'RRT',
+        category: 'Motion Planning',
+        dimensionality: '3D',
+        description: 'Grow a collision-free tree through a 3D workspace.',
+        tags: ['robotics', 'sampling', 'path planning'],
+    },
+    parameters,
+    defaults: rrtDefaults,
+    presets: [
+        { name: 'Open space', values: { obstacleCount: 0, seed: 19 } },
+        {
+            name: 'Narrow passage',
+            values: { obstacleCount: 12, obstacleMin: 0.55, obstacleMax: 1.1, seed: 102 },
+        },
+        { name: 'Dense obstacles', values: { obstacleCount: 16, seed: 941 } },
+        { name: 'High goal bias', values: { goalBias: 0.4, seed: 91 } },
+        { name: 'Low goal bias', values: { goalBias: 0.03, seed: 91 } },
+    ],
+    pseudocode: [
+        { id: 1, text: 'tree ← {start}' },
+        { id: 2, text: 'sample random point or goal' },
+        { id: 3, text: 'nearest ← closest tree node' },
+        { id: 4, text: 'steer toward sample; add if collision-free' },
+        { id: 5, text: 'if goal is reachable: connect and trace path' },
+        { id: 6, text: 'stop after iteration budget' },
+    ],
+    education: {
+        overview:
+            'RRT incrementally explores a continuous space by extending a tree toward random samples.',
+        intuition:
+            'Random targets pull the nearest branch outward. Goal-biased samples steer exploration toward the destination; collisions reject unsafe edges.',
+        complexity:
+            'With a linear nearest-node search, up to O(N²) time and O(N) tree storage for N iterations, excluding recorded frames.',
+        applications:
+            'Robot arm motion planning, autonomous navigation, and geometric path exploration.',
+        legend: [
+            {
+                label: 'Start',
+                color: '#5cae9e',
+                mark: '●',
+                meaning: 'Larger root node of the tree',
+            },
+            {
+                label: 'Goal',
+                color: '#be8fc7',
+                mark: '◎',
+                meaning: 'Target position with an ink outline',
+            },
+            {
+                label: 'Tree',
+                color: '#65828a',
+                mark: '─',
+                meaning: 'Accepted nodes and sketched edges',
+            },
+            {
+                label: 'Newest',
+                color: '#eb9867',
+                mark: '━',
+                meaning: 'Highlighted latest accepted branch',
+            },
+            {
+                label: 'Rejected',
+                color: '#d67972',
+                mark: '×',
+                meaning: 'Crossed-out collision sample',
+            },
+            {
+                label: 'Solution',
+                color: '#78bd8c',
+                mark: '═',
+                meaning: 'Bold path from root to goal',
+            },
+        ],
+        references: [
+            {
+                label: 'LaValle, Rapidly-exploring Random Trees: A New Tool for Path Planning (1998)',
+                url: 'https://msl.cs.illinois.edu/~lavalle/papers/Lav98c.pdf',
+                kind: 'original',
+            },
+            {
+                label: 'This site: spherical obstacles and fixed-length 3D steering',
+                url: '#/algorithm/rrt',
+                kind: 'implementation',
+            },
+        ],
+    },
+    run: (params) => runRrt(params as RrtParams),
+    renderer: lazy(() => import('./RrtScene')),
+    inspect: inspectRrt,
+}
