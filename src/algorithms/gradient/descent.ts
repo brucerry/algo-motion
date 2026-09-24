@@ -70,7 +70,7 @@ export function runDescent(params: GradientParams): SimulationRun<DescentState> 
         Math.abs(params.startY) > 4 ||
         !Number.isInteger(params.maxIterations) ||
         params.maxIterations < 1 ||
-        params.maxIterations > 300 ||
+        params.maxIterations > 3000 ||
         !Number.isFinite(params.tolerance) ||
         params.tolerance <= 0 ||
         params.tolerance > 0.5

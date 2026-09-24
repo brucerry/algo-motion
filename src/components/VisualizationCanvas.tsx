@@ -8,25 +8,41 @@ import { scenePalette, type Theme } from '../visual/scenePalette'
 
 export type CameraCommand = { preset: 'perspective' | 'top' | 'side'; revision: number }
 
-function CameraRig({ command, algorithmId }: { command: CameraCommand; algorithmId: string }) {
+function CameraRig({
+    command,
+    algorithm,
+}: {
+    command: CameraCommand
+    algorithm: RegisteredAlgorithm
+}) {
     const controls = useRef<OrbitControlsImpl>(null)
     const { camera } = useThree()
     useEffect(() => {
-        const distance = algorithmId === 'rrt' ? 13 : algorithmId === 'gradient-descent' ? 11 : 21
-        const targetY = algorithmId === 'gradient-descent' ? 1 : 0
+        const distance = algorithm.meta.camera?.distance ?? 21
+        const targetY = algorithm.meta.camera?.targetY ?? 0
         const position: [number, number, number] =
             command.preset === 'top'
                 ? [0, distance, 0.01]
                 : command.preset === 'side'
                   ? [0, targetY + distance * 0.35, distance]
-                  : [distance * 0.7, targetY + distance * 0.72, distance * 0.7]
+                  : (algorithm.meta.camera?.perspective ?? [
+                        distance * 0.7,
+                        targetY + distance * 0.72,
+                        distance * 0.7,
+                    ])
         camera.position.set(...position)
         camera.lookAt(0, targetY, 0)
         controls.current?.target.set(0, targetY, 0)
         controls.current?.update()
-    }, [command, algorithmId, camera])
+    }, [command, algorithm, camera])
     return (
-        <OrbitControls ref={controls} makeDefault enableDamping minDistance={3} maxDistance={45} />
+        <OrbitControls
+            ref={controls}
+            makeDefault
+            enableDamping
+            minDistance={0.15}
+            maxDistance={100}
+        />
     )
 }
 
@@ -74,7 +90,7 @@ export default function VisualizationCanvas({
                     intensity={theme === 'dark' ? 21 : 13}
                     color={palette.frontier}
                 />
-                <CameraRig command={cameraCommand} algorithmId={algorithm.meta.id} />
+                <CameraRig command={cameraCommand} algorithm={algorithm} />
                 <Suspense fallback={null}>
                     <Renderer
                         key={algorithm.meta.id}

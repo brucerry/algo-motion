@@ -64,4 +64,39 @@ describe('grid pathfinding', () => {
             false,
         )
     })
+    it('traverses depth first and reconstructs valid routes or no path deterministically', () => {
+        const result = runGrid('dfs', gridDefaults, empty)
+        expect(result).toEqual(runGrid('dfs', gridDefaults, empty))
+        expect(result.outcome).toBe('success')
+        const path = result.frames.at(-1)!.state.path
+        expect(path[0]).toBe(empty.start)
+        expect(path.at(-1)).toBe(empty.goal)
+        path.slice(1).forEach((id, index) =>
+            expect(gridNeighbors(empty, path[index]).some((neighbor) => neighbor.id === id)).toBe(
+                true,
+            ),
+        )
+        const blocked = { ...empty, blocked: empty.blocked.map((_, id) => id === 1 || id === 4) }
+        const failed = runGrid('dfs', gridDefaults, blocked)
+        expect(failed.outcome).toBe('no-path')
+        expect(failed.frames.at(-1)!.state.path).toEqual([])
+        expect(failed.frames.some((frame) => frame.event === 'backtrack')).toBe(true)
+    })
+    it('completes a large DFS trace beyond the former frame budget', () => {
+        const size = 60 * 60
+        const environment: GridEnvironment = {
+            width: 60,
+            depth: 60,
+            blocked: Array.from({ length: size }, (_, id) => id === size - 1),
+            weights: Array(size).fill(1),
+            start: 0,
+            goal: size - 1,
+            diagonal: false,
+        }
+        const result = runGrid('dfs', gridDefaults, environment)
+        expect(result.outcome).toBe('no-path')
+        expect(result.frames.length).toBeGreaterThan(3000)
+        expect(result.frames.at(-1)).toMatchObject({ event: 'no-path', activeLines: [7] })
+        expect(result.frames.at(-1)!.state.path).toEqual([])
+    })
 })

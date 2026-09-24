@@ -4,6 +4,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { Color, InstancedMesh, Object3D } from 'three'
 import type { SceneProps } from '../../engine/types'
 import { scenePalette } from '../../visual/scenePalette'
+import { tactileTexture } from '../../visual/tactileTexture'
 import type { GridState } from './grid'
 
 const ring = (x: number, z: number, radius: number, y: number) =>
@@ -95,10 +96,16 @@ export default function GridScene({ state, onSelect, selectedId, theme }: SceneP
         selected !== null && selected >= 0 && selected < count ? position(selected) : null
     const currentPosition = state.current === null ? null : position(state.current)
     return (
-        <group>
+        <group scale={Math.min(1, 24 / Math.max(env.width, env.depth))}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]}>
                 <planeGeometry args={[env.width + 1, env.depth + 1]} />
-                <meshStandardMaterial color={colors.ground} roughness={1} />
+                <meshStandardMaterial
+                    color={colors.ground}
+                    map={tactileTexture}
+                    bumpMap={tactileTexture}
+                    bumpScale={0.012}
+                    roughness={1}
+                />
             </mesh>
             <gridHelper
                 args={[
@@ -111,7 +118,14 @@ export default function GridScene({ state, onSelect, selectedId, theme }: SceneP
             />
             <instancedMesh ref={mesh} args={[undefined, undefined, count]} onClick={click}>
                 <boxGeometry />
-                <meshStandardMaterial roughness={1} metalness={0} flatShading />
+                <meshStandardMaterial
+                    map={tactileTexture}
+                    bumpMap={tactileTexture}
+                    bumpScale={0.035}
+                    roughness={1}
+                    metalness={0}
+                    flatShading
+                />
             </instancedMesh>
             {pathPoints.length > 1 && (
                 <>

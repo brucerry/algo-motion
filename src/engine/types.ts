@@ -13,6 +13,7 @@ export type ParameterDefinition =
           step?: number
           integer?: boolean
           control?: 'slider' | 'number'
+          bounds?: (params: Params) => { min?: number; max?: number }
       })
     | (BaseParam & { type: 'seed'; defaultValue: number })
     | (BaseParam & { type: 'boolean'; defaultValue: boolean })
@@ -33,7 +34,7 @@ export type Frame<S> = {
 }
 export type SimulationRun<S> = {
     frames: Frame<S>[]
-    outcome: 'success' | 'no-path' | 'limit' | 'error'
+    outcome: 'success' | 'no-path' | 'no-solution' | 'limit' | 'error'
     error?: string
 }
 export type PseudocodeLine = { id: number; text: string }
@@ -56,9 +57,11 @@ export type AlgorithmMeta = {
     name: string
     shortName: string
     category: string
-    dimensionality: '2D grid in 3D' | '3D'
+    dimensionality:
+        '2D grid in 3D' | '3D' | 'Array in 3D' | 'Table in 3D' | 'Board in 3D' | 'Timeline in 3D'
     description: string
     tags: string[]
+    camera?: { distance: number; targetY?: number; perspective?: [number, number, number] }
 }
 export type SceneProps<S> = {
     state: S

@@ -6,6 +6,24 @@ export function defaultsFor(definitions: ParameterDefinition[]): Params {
     )
 }
 
+export function resolveParameterDefinition(
+    definition: ParameterDefinition,
+    params: Params,
+): ParameterDefinition {
+    if (definition.type !== 'number' || !definition.bounds) return definition
+    const bounds = definition.bounds(params)
+    const min = Math.max(definition.min, bounds.min ?? definition.min)
+    const max = Math.min(definition.max, bounds.max ?? definition.max)
+    return { ...definition, min: Math.min(min, max), max }
+}
+
+export function resolveParameterDefinitions(
+    definitions: ParameterDefinition[],
+    params: Params,
+): ParameterDefinition[] {
+    return definitions.map((definition) => resolveParameterDefinition(definition, params))
+}
+
 export function parseParameter(
     definition: ParameterDefinition,
     value: unknown,
@@ -55,6 +73,22 @@ export function validateParameters(
         const result = parseParameter(definition, raw[definition.key])
         if (result.error) errors[definition.key] = result.error
         else params[definition.key] = result.value!
+    }
+    for (let pass = 0; pass < definitions.length; pass++) {
+        let changed = false
+        for (const definition of definitions) {
+            if (definition.type !== 'number' || !definition.bounds) continue
+            const resolved = resolveParameterDefinition(definition, params)
+            if (resolved.type !== 'number') continue
+            const value = Number(params[definition.key])
+            const adjusted = Math.max(resolved.min, Math.min(resolved.max, value))
+            if (adjusted === value) continue
+            params[definition.key] = adjusted
+            errors[definition.key] =
+                `${definition.label} adjusted to ${adjusted} (allowed ${resolved.min} to ${resolved.max}).`
+            changed = true
+        }
+        if (!changed) break
     }
     return { params, errors }
 }

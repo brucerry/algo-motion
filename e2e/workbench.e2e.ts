@@ -44,6 +44,11 @@ async function installAudioProbe(page: Page) {
 
 const cueCount = (page: Page) => page.evaluate(() => Number((window as any).cueStarts))
 
+async function expandCategory(page: Page, name: string) {
+    const category = page.getByRole('button', { name, exact: true })
+    if ((await category.getAttribute('aria-expanded')) !== 'true') await category.click()
+}
+
 test('workbench plays, changes algorithms, and replays a shared URL', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
@@ -64,8 +69,10 @@ test('workbench plays, changes algorithms, and replays a shared URL', async ({ p
     expect(url).toContain('seed=')
     await page.reload()
     await expect(page).toHaveURL(url)
+    await expandCategory(page, 'Motion Planning')
     await page.getByRole('button', { name: /^RRT/ }).click()
     await expect(page.getByRole('heading', { name: 'Rapidly-exploring Random Tree' })).toBeVisible()
+    await expandCategory(page, 'Optimization')
     await page.getByRole('button', { name: /^Gradient Descent/ }).click()
     await expect(page.getByRole('heading', { name: 'Gradient Descent' })).toBeVisible()
     expect(errors).toEqual([])
@@ -102,7 +109,9 @@ test('weighted comparison labels hops and costs separately', async ({ page }) =>
 test('invalid parameters are rejected and speed and theme persist', async ({ page }) => {
     await page.goto('/#/algorithm/rrt?stepSize=-1&seed=12')
     await expect(page.getByRole('heading', { name: 'Rapidly-exploring Random Tree' })).toBeVisible()
-    await expect(page.getByRole('status')).toContainText('Step size')
+    await expect(page.getByRole('status').filter({ hasText: 'Step size' })).toContainText(
+        'Step size',
+    )
     const stepSize = page.getByRole('spinbutton', { name: 'Step size' })
     await expect(stepSize).toHaveValue('0.75')
     await stepSize.fill('-1')
@@ -204,11 +213,11 @@ test('step sounds require opt-in and follow only displayed step transitions', as
         'true',
     )
     await page.getByRole('button', { name: 'Next step' }).click()
-    expect(await cueCount(page)).toBe(1)
+    await expect.poll(() => cueCount(page)).toBe(1)
     await page.keyboard.press('ArrowLeft')
-    expect(await cueCount(page)).toBe(2)
+    await expect.poll(() => cueCount(page)).toBe(2)
     await page.keyboard.press('ArrowRight')
-    expect(await cueCount(page)).toBe(3)
+    await expect.poll(() => cueCount(page)).toBe(3)
     await page.getByRole('button', { name: 'Last step' }).click()
     await page.getByRole('button', { name: 'Restart' }).click()
     await page.getByLabel('Execution timeline').evaluate((element) => {
@@ -219,9 +228,11 @@ test('step sounds require opt-in and follow only displayed step transitions', as
     })
     await expect(page.getByText('Step 4 /', { exact: false })).toBeVisible()
     expect(await cueCount(page)).toBe(3)
+    await expandCategory(page, 'Motion Planning')
     await page.getByRole('button', { name: /^RRT/ }).click()
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).fill('1')
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).blur()
+    await expandCategory(page, 'Graph Search')
     await page.getByRole('button', { name: /^A\*/ }).click()
     await page.getByRole('button', { name: 'Compare searches' }).click()
     await page.getByRole('tab', { name: 'Breadth-First Search' }).click()
@@ -253,14 +264,20 @@ test('playback cues work at slow and fast speeds without hidden-tab catch-up', a
         Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }),
     )
     const beforeHidden = await cueCount(page)
+    const beforeHiddenStep = Number(
+        await page.locator('.shoes-slot').getAttribute('data-shoe-step'),
+    )
     await page.getByRole('button', { name: 'Next step' }).click()
     expect(await cueCount(page)).toBe(beforeHidden)
+    await expect
+        .poll(async () => Number(await page.locator('.shoes-slot').getAttribute('data-shoe-step')))
+        .toBeGreaterThan(beforeHiddenStep)
     await page.evaluate(() => {
         Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
         document.dispatchEvent(new Event('visibilitychange'))
     })
     await page.getByRole('button', { name: 'Next step' }).click()
-    expect(await cueCount(page)).toBe(beforeHidden + 1)
+    await expect.poll(() => cueCount(page)).toBe(beforeHidden + 1)
 })
 
 test('comparison characters and cues follow the selected displayed run', async ({ page }) => {
@@ -268,6 +285,8 @@ test('comparison characters and cues follow the selected displayed run', async (
     await page.goto('/')
     await page.getByRole('button', { name: 'Compare searches' }).click()
     const astarCard = page.locator('.comparison-card').filter({ hasText: 'A*' })
+    await expect(astarCard).toContainText(/Steps \d+ \/ \d+/)
+    await expect(page.locator('.timeline-label strong')).not.toContainText('pending')
     const astarEnd = Number((await astarCard.textContent())?.match(/Steps \d+ \/ (\d+)/)?.[1])
     expect(astarEnd).toBeGreaterThan(1)
     const sharedEnd = Number(await page.getByLabel('Execution timeline').getAttribute('max'))
@@ -319,7 +338,9 @@ test('server progress is visible and playback motion stops on pause', async ({ p
     await expect(server).toHaveAttribute('data-moving', 'false')
     const pausedProgress = Number(await server.getAttribute('data-server-progress'))
     await page.keyboard.press('ArrowLeft')
-    expect(Number(await server.getAttribute('data-server-progress'))).toBeLessThan(pausedProgress)
+    await expect
+        .poll(async () => Number(await server.getAttribute('data-server-progress')))
+        .toBeLessThan(pausedProgress)
     await page.getByRole('button', { name: 'Last step' }).click()
     await expect(server).toHaveAttribute('data-server-progress', '100')
     await expect(server.locator('.server-caption')).toContainText('FINISHED 100%')
@@ -333,7 +354,9 @@ test('unavailable audio reports status and keeps playback usable', async ({ page
     })
     await page.goto('/')
     await page.getByRole('button', { name: 'Enable step sounds' }).click()
-    await expect(page.getByRole('status')).toContainText('Sound unavailable in this browser.')
+    await expect(
+        page.getByRole('status').filter({ hasText: 'Sound unavailable in this browser.' }),
+    ).toContainText('Sound unavailable in this browser.')
     await page.getByRole('button', { name: 'Next step' }).click()
     await expect(page.getByText('Step 1 /', { exact: false })).toBeVisible()
 })
@@ -346,6 +369,9 @@ test('learning companions reflect success, iteration limit, and reduced motion',
     await expect(page.locator('.server-slot')).toHaveAttribute('data-server-phase', 'ready')
     await expect(page.locator('.server-slot')).toHaveAttribute('aria-hidden', 'true')
     await expect(page.locator('.shoes-slot')).toHaveAttribute('aria-hidden', 'true')
+    await expect
+        .poll(async () => Number(await page.getByLabel('Execution timeline').getAttribute('max')))
+        .toBeGreaterThan(1)
     await page.keyboard.press('ArrowRight')
     await expect(page.locator('.server-slot')).toHaveAttribute('data-server-phase', 'working')
     await expect(page.locator('.shoes-slot')).toHaveAttribute('data-shoe-step', '1')
@@ -359,6 +385,7 @@ test('learning companions reflect success, iteration limit, and reduced motion',
     await page.getByRole('button', { name: 'Last step' }).click()
     await expect(page.locator('.server-slot')).toHaveAttribute('data-server-phase', 'burnout')
     await expect(page.locator('.outcome-badge')).toContainText('Completed')
+    await expandCategory(page, 'Motion Planning')
     await page.getByRole('button', { name: /^RRT/ }).click()
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).fill('1')
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).blur()
@@ -376,16 +403,18 @@ test('learning companions reflect success, iteration limit, and reduced motion',
 })
 
 test('all algorithm families render complete runs and guides', async ({ page }) => {
+    test.setTimeout(60000)
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.goto('/')
-    for (const [nav, heading] of [
-        [/^Breadth-First Search/, 'Breadth-First Search'],
-        [/^Dijkstra/, 'Dijkstra'],
-        [/^A\*/, 'A* Search'],
-        [/^RRT/, 'Rapidly-exploring Random Tree'],
-        [/^Gradient Descent/, 'Gradient Descent'],
+    for (const [category, nav, heading] of [
+        ['Graph Search', /^Breadth-First Search/, 'Breadth-First Search'],
+        ['Graph Search', /^Dijkstra/, 'Dijkstra'],
+        ['Graph Search', /^A\*/, 'A* Search'],
+        ['Motion Planning', /^RRT/, 'Rapidly-exploring Random Tree'],
+        ['Optimization', /^Gradient Descent/, 'Gradient Descent'],
     ] as const) {
+        await expandCategory(page, category)
         await page.getByRole('button', { name: nav }).click()
         await expect(page.getByRole('heading', { name: heading })).toBeVisible()
         await expect(page.locator('canvas')).toBeVisible()

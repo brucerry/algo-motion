@@ -1,4 +1,6 @@
-import type { Frame, Metric, Params, SimulationRun } from '../../engine/types'
+import type { Metric, Params, SimulationRun } from '../../engine/types'
+import { collectSteps } from '../../engine/steps'
+import { gridSteps } from './steps'
 import { createRandom, deriveSeed } from '../../engine/seededRandom'
 
 export type GridParams = Params & {
@@ -29,7 +31,7 @@ export type GridState = {
     path: number[]
     scores: Record<number, GridScore>
 }
-export type GridAlgorithm = 'astar' | 'bfs' | 'dijkstra'
+export type GridAlgorithm = 'astar' | 'bfs' | 'dijkstra' | 'dfs'
 
 export const gridDefaults: GridParams = {
     width: 16,
@@ -48,8 +50,8 @@ export function createGrid(params: GridParams): GridEnvironment {
         !Number.isInteger(params.depth) ||
         params.width < 4 ||
         params.depth < 4 ||
-        params.width > 24 ||
-        params.depth > 24 ||
+        params.width > 240 ||
+        params.depth > 240 ||
         !Number.isFinite(params.density) ||
         params.density < 0 ||
         params.density > 0.38
@@ -120,145 +122,14 @@ export function heuristicDistance(
     return Math.hypot(dx, dy)
 }
 
-function pathFrom(parent: Map<number, number>, goal: number): number[] {
-    const path = [goal]
-    let node = goal
-    while (parent.has(node)) {
-        node = parent.get(node)!
-        path.push(node)
-    }
-    return path.reverse()
-}
-
-function stateMetrics(state: GridState, algorithm: GridAlgorithm): Metric[] {
-    const current = state.current === null ? null : state.scores[state.current]
-    const result: Metric[] = [
-        { label: 'Visited nodes', value: state.visited.length },
-        { label: algorithm === 'bfs' ? 'Queue' : 'Frontier', value: state.frontier.length },
-        { label: 'Path hops', value: state.path.length ? state.path.length - 1 : '—' },
-    ]
-    if (current)
-        result.push({
-            label: algorithm === 'bfs' ? 'Distance' : 'Current cost',
-            value: +current.g.toFixed(2),
-        })
-    if (algorithm === 'astar' && current)
-        result.push(
-            { label: 'h', value: +current.h.toFixed(2) },
-            { label: 'f', value: +current.f.toFixed(2) },
-        )
-    if (state.path.length && algorithm !== 'bfs')
-        result.push({ label: 'Path cost', value: +state.scores[state.path.at(-1)!].g.toFixed(2) })
-    return result
-}
-
 export function runGrid(
     algorithm: GridAlgorithm,
     params: GridParams,
     sharedEnvironment?: GridEnvironment,
 ): SimulationRun<GridState> {
     const environment = sharedEnvironment || createGrid(params)
-    const frontier = new Set<number>([environment.start])
-    const visited = new Set<number>()
-    const parent = new Map<number, number>()
-    const g = new Map<number, number>([[environment.start, 0]])
-    const scores: Record<number, GridScore> = {}
-    const frames: Frame<GridState>[] = []
-    let current: number | null = null
-    let path: number[] = []
-    const hFor = (node: number) =>
-        algorithm === 'astar'
-            ? heuristicDistance(environment, node, environment.goal, params.heuristic)
-            : 0
-    scores[environment.start] = {
-        g: 0,
-        h: hFor(environment.start),
-        f: hFor(environment.start) * (algorithm === 'astar' ? params.heuristicWeight : 1),
-        parent: null,
-    }
-    const record = (event: string, explanation: string, activeLines: number[]) => {
-        const state: GridState = {
-            environment,
-            current,
-            frontier: [...frontier],
-            visited: [...visited],
-            path: [...path],
-            scores: Object.fromEntries(
-                Object.entries(scores).map(([id, score]) => [id, { ...score }]),
-            ),
-        }
-        frames.push({
-            index: frames.length,
-            state,
-            activeLines,
-            event,
-            explanation,
-            metrics: stateMetrics(state, algorithm),
-        })
-    }
-    record(
-        'initialize',
-        `Start at cell (0, 0). The goal is (${environment.width - 1}, ${environment.depth - 1}).`,
-        [1],
-    )
-    while (frontier.size) {
-        if (algorithm === 'bfs') current = frontier.values().next().value!
-        else
-            current = [...frontier].sort(
-                (a, b) => scores[a].f - scores[b].f || scores[a].h - scores[b].h || a - b,
-            )[0]
-        frontier.delete(current)
-        visited.add(current)
-        const here = scores[current]
-        record(
-            'visit',
-            `${algorithm.toUpperCase()} selected (${current % environment.width}, ${Math.floor(current / environment.width)}) with ${algorithm === 'astar' ? `g=${here.g.toFixed(2)}, h=${here.h.toFixed(2)}, f=${here.f.toFixed(2)}` : `distance=${here.g.toFixed(2)}`}.`,
-            [2, 3],
-        )
-        if (current === environment.goal) {
-            path = pathFrom(parent, current)
-            record(
-                'success',
-                algorithm === 'bfs'
-                    ? `Goal reached in ${path.length - 1} hops. BFS does not optimize weighted terrain cost.`
-                    : `Goal reached. The route contains ${path.length - 1} moves and has cost ${here.g.toFixed(2)}.`,
-                [5],
-            )
-            return { frames, outcome: 'success' }
-        }
-        for (const neighbor of gridNeighbors(environment, current)) {
-            const candidate = here.g + (algorithm === 'bfs' ? 1 : neighbor.cost)
-            if (algorithm === 'bfs' && (frontier.has(neighbor.id) || visited.has(neighbor.id)))
-                continue
-            if (algorithm !== 'bfs' && candidate >= (g.get(neighbor.id) ?? Infinity) - 1e-9)
-                continue
-            parent.set(neighbor.id, current)
-            g.set(neighbor.id, candidate)
-            const h = hFor(neighbor.id)
-            scores[neighbor.id] = {
-                g: candidate,
-                h,
-                f: candidate + (algorithm === 'astar' ? params.heuristicWeight * h : 0),
-                parent: current,
-            }
-            visited.delete(neighbor.id)
-            frontier.add(neighbor.id)
-            record(
-                'discover',
-                `Updated (${neighbor.id % environment.width}, ${Math.floor(neighbor.id / environment.width)}) from current node; tentative ${algorithm === 'bfs' ? 'distance' : 'cost'} is ${candidate.toFixed(2)}.`,
-                [4],
-            )
-        }
-    }
-    current = null
-    record(
-        'no-path',
-        'The frontier is empty. No traversable route connects start and goal in this environment.',
-        [6],
-    )
-    return { frames, outcome: 'no-path' }
+    return collectSteps(gridSteps(algorithm, params, environment))
 }
-
 export function inspectGrid(state: GridState, selected: string): Metric[] | null {
     const id = Number(selected)
     if (!Number.isInteger(id) || id < 0 || id >= state.environment.blocked.length) return null

@@ -201,6 +201,26 @@ button {
     font-size: 10px;
     font-weight: 800;
 }
+.category-toggle {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    border: 0;
+    border-radius: 6px;
+    padding: 5px 3px;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+}
+.category-toggle:hover {
+    color: var(--text);
+    background: var(--surface-2);
+}
 .algorithm-item {
     display: flex;
     width: 100%;
@@ -322,6 +342,21 @@ button {
     background: none;
     color: inherit;
 }
+.terminal-message {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 10px;
+    padding: 10px 13px;
+    border: 1px solid #987245;
+    border-radius: 8px;
+    background: #3c2e22;
+    color: #ffdfa4;
+    font-size: 13px;
+}
+.terminal-message strong {
+    white-space: nowrap;
+}
 .compare-switcher {
     display: flex;
     gap: 4px;
@@ -391,6 +426,20 @@ button {
     text-align: center;
     padding: 50px;
     color: var(--muted);
+}
+.canvas-obscured {
+    opacity: 0;
+    pointer-events: none;
+}
+.canvas-transition {
+    position: absolute;
+    inset: 37px 0 0;
+    display: grid;
+    place-items: center;
+    padding: 30px;
+    color: var(--muted);
+    background: #101925;
+    text-align: center;
 }
 .camera-toolbar {
     position: absolute;
@@ -696,7 +745,7 @@ input[type='range'] {
 }
 .comparison-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
     gap: 8px;
     margin-top: 12px;
 }
@@ -731,6 +780,18 @@ input[type='range'] {
     flex-direction: column;
     gap: 17px;
     padding: 0 8px;
+}
+.comparison-parameters section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.comparison-parameters h3 {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text);
 }
 .field {
     display: flex;

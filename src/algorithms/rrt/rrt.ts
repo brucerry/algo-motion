@@ -85,12 +85,14 @@ export function createWorkspace(params: RrtParams): {
     if (
         !Number.isFinite(params.workspace) ||
         params.workspace < 6 ||
-        params.workspace > 20 ||
+        params.workspace > 200 ||
         !Number.isInteger(params.obstacleCount) ||
         params.obstacleCount < 0 ||
-        params.obstacleCount > 18 ||
+        params.obstacleCount > 180 ||
+        !Number.isFinite(params.obstacleMin) ||
+        !Number.isFinite(params.obstacleMax) ||
         params.obstacleMin < 0.2 ||
-        params.obstacleMax > 1.6 ||
+        params.obstacleMax > Math.min(1.6, params.workspace / 4) ||
         params.obstacleMin > params.obstacleMax
     )
         throw new Error('Workspace settings exceed safe limits.')
@@ -130,16 +132,16 @@ export function runRrt(params: RrtParams): SimulationRun<RrtState> {
     if (
         !Number.isInteger(params.maxIterations) ||
         params.maxIterations < 1 ||
-        params.maxIterations > 600 ||
+        params.maxIterations > 6000 ||
         !Number.isFinite(params.stepSize) ||
         params.stepSize <= 0 ||
-        params.stepSize > 2 ||
+        params.stepSize > Math.min(2, params.workspace / 4) ||
         !Number.isFinite(params.goalBias) ||
         params.goalBias < 0 ||
         params.goalBias > 1 ||
         !Number.isFinite(params.goalThreshold) ||
         params.goalThreshold <= 0 ||
-        params.goalThreshold > 2
+        params.goalThreshold > Math.min(2, params.workspace / 4)
     )
         throw new Error('RRT settings exceed safe limits.')
     const { start, goal, obstacles } = createWorkspace(params)
@@ -155,7 +157,7 @@ export function runRrt(params: RrtParams): SimulationRun<RrtState> {
         iteration = 0
     const record = (event: string, explanation: string, activeLines: number[]) => {
         const state: RrtState = {
-            nodes: nodes.map((node) => ({ ...node, position: [...node.position] as Vec3 })),
+            nodes: [...nodes],
             obstacles,
             start,
             goal,

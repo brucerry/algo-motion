@@ -18,10 +18,12 @@ function ParameterControl({
     definition,
     value,
     onChange,
+    idPrefix,
 }: {
     definition: ParameterDefinition
     value: ParamValue
     onChange: (value: ParamValue) => void
+    idPrefix: string
 }) {
     const [draft, setDraft] = useState(String(value))
     const [touched, setTouched] = useState(false)
@@ -38,6 +40,7 @@ function ParameterControl({
     )
     const result = parseParameter(definition, draft)
     const error = touched ? result.error : undefined
+    const fieldId = `${idPrefix}-${definition.key}`
     const commit = () => {
         setTouched(true)
         if (!result.error && result.value !== undefined) onChange(result.value)
@@ -72,7 +75,7 @@ function ParameterControl({
         )
     return (
         <div className="field" title={definition.description}>
-            <label htmlFor={`param-${definition.key}`} className="field-title">
+            <label htmlFor={fieldId} className="field-title">
                 {definition.label}
             </label>
             <div className="number-row">
@@ -93,14 +96,14 @@ function ParameterControl({
                     />
                 )}
                 <input
-                    id={`param-${definition.key}`}
+                    id={fieldId}
                     type="number"
                     value={draft}
                     min={definition.type === 'number' ? definition.min : 0}
                     max={definition.type === 'number' ? definition.max : 4294967295}
                     step={definition.type === 'number' ? definition.step || 'any' : 1}
                     aria-invalid={!!error}
-                    aria-describedby={error ? `error-${definition.key}` : undefined}
+                    aria-describedby={error ? `error-${fieldId}` : undefined}
                     onChange={(event) => {
                         setDraft(event.target.value)
                         setTouched(true)
@@ -111,14 +114,42 @@ function ParameterControl({
                     }}
                 />
             </div>
+            {(definition.type === 'number' || definition.type === 'seed') && (
+                <small className="parameter-range">
+                    Allowed: {definition.type === 'number' ? definition.min : 0}–
+                    {definition.type === 'number' ? definition.max : 4294967295}
+                </small>
+            )}
             {error && (
-                <small id={`error-${definition.key}`} className="error-text" role="alert">
+                <small id={`error-${fieldId}`} className="error-text" role="alert">
                     {error}
                 </small>
             )}
             {definition.description && <small>{definition.description}</small>}
         </div>
     )
+}
+
+export function ParameterFields({
+    definitions,
+    params,
+    onChange,
+    idPrefix,
+}: {
+    definitions: ParameterDefinition[]
+    params: Params
+    onChange: (key: string, value: ParamValue) => void
+    idPrefix: string
+}) {
+    return definitions.map((definition) => (
+        <ParameterControl
+            key={definition.key}
+            definition={definition}
+            value={params[definition.key]}
+            onChange={(value) => onChange(definition.key, value)}
+            idPrefix={idPrefix}
+        />
+    ))
 }
 
 export default function ParameterPanel({
@@ -156,14 +187,12 @@ export default function ParameterPanel({
                     ))}
                 </select>
             </div>
-            {definitions.map((definition) => (
-                <ParameterControl
-                    key={definition.key}
-                    definition={definition}
-                    value={params[definition.key]}
-                    onChange={(value) => onChange(definition.key, value)}
-                />
-            ))}
+            <ParameterFields
+                definitions={definitions}
+                params={params}
+                onChange={onChange}
+                idPrefix="param"
+            />
             {error && (
                 <p className="error-box" role="alert">
                     {error}

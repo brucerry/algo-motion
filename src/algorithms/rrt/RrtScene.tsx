@@ -4,6 +4,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { BufferAttribute, BufferGeometry, Color, InstancedMesh, Object3D } from 'three'
 import type { SceneProps } from '../../engine/types'
 import { scenePalette } from '../../visual/scenePalette'
+import { tactileTexture } from '../../visual/tactileTexture'
 import type { RrtState } from './rrt'
 
 export default function RrtScene({ state, onSelect, selectedId, theme }: SceneProps<RrtState>) {
@@ -60,7 +61,7 @@ export default function RrtScene({ state, onSelect, selectedId, theme }: ScenePr
     const newest = state.newestNode === null ? null : state.nodes[state.newestNode]
     const selectedNode = selectedId === null ? null : state.nodes[Number(selectedId)]
     return (
-        <group>
+        <group scale={Math.min(1, 12 / ((Math.abs(state.goal[0]) * 2) / 0.78))}>
             <gridHelper
                 args={[12, 12, colors.grid, colors.grid]}
                 position={[0, -state.goal[1] * 2, 0]}
@@ -72,8 +73,11 @@ export default function RrtScene({ state, onSelect, selectedId, theme }: ScenePr
                 <Sphere key={index} args={[obstacle.radius, 16, 12]} position={obstacle.center}>
                     <meshStandardMaterial
                         color={colors.obstacle}
+                        map={tactileTexture}
+                        bumpMap={tactileTexture}
+                        bumpScale={0.055}
                         transparent
-                        opacity={0.48}
+                        opacity={0.58}
                         roughness={1}
                         flatShading
                     />
@@ -88,9 +92,16 @@ export default function RrtScene({ state, onSelect, selectedId, theme }: ScenePr
                     <meshBasicMaterial color={colors.ink} wireframe transparent opacity={0.33} />
                 </Sphere>
             ))}
-            <instancedMesh ref={nodeMesh} args={[undefined, undefined, 605]} onClick={onNodeClick}>
+            <instancedMesh ref={nodeMesh} args={[undefined, undefined, 6005]} onClick={onNodeClick}>
                 <sphereGeometry args={[1, 8, 6]} />
-                <meshStandardMaterial roughness={1} metalness={0} flatShading />
+                <meshStandardMaterial
+                    map={tactileTexture}
+                    bumpMap={tactileTexture}
+                    bumpScale={0.025}
+                    roughness={1}
+                    metalness={0}
+                    flatShading
+                />
             </instancedMesh>
             {newest && newest.parent !== null && (
                 <Line

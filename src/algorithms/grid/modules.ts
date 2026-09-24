@@ -24,7 +24,7 @@ const common: ParameterDefinition[] = [
         label: 'Grid width',
         defaultValue: 16,
         min: 4,
-        max: 24,
+        max: 240,
         step: 1,
         integer: true,
         control: 'slider',
@@ -36,7 +36,7 @@ const common: ParameterDefinition[] = [
         label: 'Grid depth',
         defaultValue: 12,
         min: 4,
-        max: 24,
+        max: 240,
         step: 1,
         integer: true,
         control: 'slider',
@@ -135,6 +135,23 @@ const legend = [
 ]
 
 const content: Record<GridAlgorithm, Education> = {
+    dfs: {
+        overview:
+            'Depth-first search follows one branch as far as possible before reversing to try another.',
+        intuition:
+            'The active stack remembers the current route. Each newly discovered neighbor is explored before its siblings.',
+        complexity:
+            'Time O(V + E), space O(V), excluding recorded frames. Its first route need not be shortest.',
+        applications: 'Reachability, maze exploration, and traversal order.',
+        legend,
+        references: [
+            {
+                label: 'Introduction to Algorithms, depth-first search',
+                url: 'https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/',
+                kind: 'standard',
+            },
+        ],
+    },
     bfs: {
         overview:
             'Breadth-first search explores a graph in increasing numbers of edges from the start.',
@@ -158,7 +175,7 @@ const content: Record<GridAlgorithm, Education> = {
         intuition:
             'Always settle the frontier cell with the smallest known cost, then relax its neighbors.',
         complexity:
-            'This bounded teaching implementation uses a linear frontier scan: O(V² + E) time and O(V) working space, excluding recorded frames.',
+            'With a priority frontier, O((V + E) log V) time and O(V + E) working space on this grid, excluding recorded steps.',
         applications: 'Weighted route planning and network path selection.',
         legend,
         references: [
@@ -175,7 +192,7 @@ const content: Record<GridAlgorithm, Education> = {
         intuition:
             'The f score is g + weight × h. With a suitable admissible estimate and weight 1, A* can find a minimum-cost path while exploring fewer cells.',
         complexity:
-            'Worst-case search can still expand exponentially many states in general graphs. This bounded grid implementation uses a linear frontier scan and records frames for replay.',
+            'Worst-case search can still expand exponentially many states in general graphs. This grid implementation uses a priority frontier and records steps for replay.',
         applications: 'Game navigation, robotic route planning, and heuristic search.',
         formula: String.raw`f(n)=g(n)+w\,h(n)`,
         legend,
@@ -195,6 +212,15 @@ const content: Record<GridAlgorithm, Education> = {
 }
 
 const pseudocode: Record<GridAlgorithm, PseudocodeLine[]> = {
+    dfs: [
+        { id: 1, text: 'start at the first cell' },
+        { id: 2, text: 'visit the current cell' },
+        { id: 3, text: 'push it on the active stack' },
+        { id: 4, text: 'explore each unvisited neighbor in order' },
+        { id: 5, text: 'if goal: reconstruct this route' },
+        { id: 6, text: 'otherwise: pop and backtrack' },
+        { id: 7, text: 'if all branches end: no path' },
+    ],
     bfs: [
         { id: 1, text: 'queue ← [start]; mark start discovered' },
         { id: 2, text: 'while queue is not empty:' },
@@ -239,7 +265,7 @@ function makeGridModule(
             category: 'Graph Search',
             dimensionality: '2D grid in 3D',
             description,
-            tags: ['grid', 'pathfinding'],
+            tags: ['grid', 'pathfinding', ...(id === 'dfs' ? ['dfs', 'backtracking'] : [])],
         },
         parameters,
         defaults,
@@ -284,6 +310,30 @@ export const dijkstraModule = makeGridModule(
     [...common, weightMode],
     [
         { name: 'Uniform grid', values: { weightMode: 'uniform', density: 0.16 } },
-        { name: 'Weighted terrain', values: { weightMode: 'terrain', density: 0.12, seed: 712 } },
+        {
+            name: 'Weighted detour',
+            values: {
+                width: 6,
+                depth: 5,
+                density: 0,
+                diagonal: false,
+                weightMode: 'terrain',
+                seed: 353,
+            },
+        },
+    ],
+)
+export const dfsModule = makeGridModule(
+    'dfs',
+    'Depth-First Search',
+    'Follow one grid branch, then backtrack when it ends.',
+    common.map((definition) =>
+        definition.type === 'number' && (definition.key === 'width' || definition.key === 'depth')
+            ? { ...definition, max: 240 }
+            : definition,
+    ),
+    [
+        { name: 'Open field', values: { density: 0.02, seed: 17 } },
+        { name: 'Branching maze', values: { density: 0.25, seed: 12345 } },
     ],
 )

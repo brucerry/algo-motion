@@ -3,6 +3,7 @@ import { Line, Sphere } from '@react-three/drei'
 import { BufferAttribute, BufferGeometry, DoubleSide } from 'three'
 import type { SceneProps } from '../../engine/types'
 import { scenePalette } from '../../visual/scenePalette'
+import { tactileTexture } from '../../visual/tactileTexture'
 import { objectives, type DescentState } from './descent'
 
 const height = (value: number) => Math.max(-1.2, Math.min(5, value * 0.8))
@@ -17,6 +18,7 @@ export default function GradientScene({
     const colors = scenePalette(theme)
     const geometry = useMemo(() => {
         const positions: number[] = [],
+            uvs: number[] = [],
             indices: number[] = []
         const cells = 48,
             span = 8
@@ -25,6 +27,7 @@ export default function GradientScene({
                 const x = -span / 2 + (span * column) / cells,
                     y = -span / 2 + (span * row) / cells
                 positions.push(x, height(objective.value(x, y)), y)
+                uvs.push(column / cells, row / cells)
             }
         for (let row = 0; row < cells; row++)
             for (let column = 0; column < cells; column++) {
@@ -36,6 +39,7 @@ export default function GradientScene({
             }
         const mesh = new BufferGeometry()
         mesh.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+        mesh.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
         mesh.setIndex(indices)
         mesh.computeVertexNormals()
         return mesh
@@ -58,6 +62,9 @@ export default function GradientScene({
             <mesh geometry={geometry}>
                 <meshStandardMaterial
                     color={colors.surface}
+                    map={tactileTexture}
+                    bumpMap={tactileTexture}
+                    bumpScale={0.075}
                     side={DoubleSide}
                     roughness={1}
                     metalness={0}
@@ -73,7 +80,7 @@ export default function GradientScene({
                     side={DoubleSide}
                     wireframe
                     transparent
-                    opacity={0.21}
+                    opacity={0.13}
                 />
             </mesh>
             {trail.length > 1 && (
@@ -104,7 +111,13 @@ export default function GradientScene({
                     onSelect('current')
                 }}
             >
-                <meshStandardMaterial color={colors.point} roughness={1} />
+                <meshStandardMaterial
+                    color={colors.point}
+                    map={tactileTexture}
+                    bumpMap={tactileTexture}
+                    bumpScale={0.03}
+                    roughness={1}
+                />
             </Sphere>
             {selectedId === 'current' && (
                 <Sphere args={[0.25, 10, 8]} position={current}>
