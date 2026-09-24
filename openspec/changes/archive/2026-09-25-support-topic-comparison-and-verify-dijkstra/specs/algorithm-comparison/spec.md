@@ -1,10 +1,6 @@
-# Algorithm Comparison Specification
+# Spec Delta
 
-## Purpose
-
-Let learners compare BFS, Dijkstra, and A* on one generated environment with aligned progress and meaningful, qualified metrics.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Shared-environment comparison
 The application SHALL compare BFS, Dijkstra, A*, and DFS on the same grid, including start, goal, obstacles, terrain weights, movement rules, and seed. Comparison SHALL use a common step control and allow users to inspect each run's state, whether shown side by side or by switching views. Every algorithm SHALL use its own search rule and retain its own terminal outcome.
@@ -35,6 +31,8 @@ The comparison SHALL show each algorithm's outcome, completed step count, and me
 #### Scenario: Uniform grid comparison
 - **WHEN** all traversable grid edges have equal cost and diagonal movement is off
 - **THEN** the comparison explains why Dijkstra and BFS can return the same minimum-hop route
+
+## ADDED Requirements
 
 ### Requirement: Topic-wide comparison
 For every topic with at least two implemented algorithms, the workbench SHALL offer comparison containing every implemented algorithm in that topic and no algorithm from another topic. Algorithms that can solve the same input SHALL receive one shared generated input while retaining their own algorithm-specific controls. Algorithms solving different kinds of problems SHALL retain separate validated inputs, which the comparison SHALL identify. A topic with only one implemented algorithm SHALL not offer a misleading comparison action.

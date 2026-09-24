@@ -48,7 +48,7 @@ Prominent action buttons, navigation cues, and camera or transport controls SHAL
 - **THEN** the focused button has an obvious visible focus mark that does not obscure its icon or label
 
 ### Requirement: Illustrated algorithm scenes
-The grid, RRT, and gradient-descent visualizations SHALL share the illustrated style through hand-drawn-looking marks, outlines, or surface treatments appropriate to each scene. Start, goal, obstacle, frontier, visited, current, solution, rejected, selected, trajectory, and gradient states SHALL remain distinguishable wherever they apply, including by a cue beyond color for critical states. Visual restyling SHALL preserve scene selection, camera interaction, and correspondence with the current simulation frame.
+The grid, RRT, gradient-descent, and new showcase visualizations SHALL share the illustrated style through hand-drawn-looking marks, outlines, or surface treatments appropriate to each scene. Start, goal, obstacle, frontier, visited, current, solution, rejected, selected, trajectory, and gradient states SHALL remain distinguishable wherever they apply, including by a cue beyond color for critical states. New scenes SHALL also distinguish considered, accepted, backtracked, and completed states wherever they apply. Visual restyling SHALL preserve scene selection, camera interaction, and correspondence with the current simulation frame.
 
 #### Scenario: Compare algorithm families
 - **WHEN** a user switches between a grid search, RRT, and gradient descent
@@ -57,6 +57,10 @@ The grid, RRT, and gradient-descent visualizations SHALL share the illustrated s
 #### Scenario: Inspect a marked object
 - **WHEN** a user selects a cell or RRT node in the restyled scene
 - **THEN** the selected object is visibly marked and its existing inspection text describes the correct current state
+
+#### Scenario: Switch to a new showcase
+- **WHEN** a user opens a sorting, tree, dynamic programming, backtracking, greedy, or array-technique showcase
+- **THEN** its illustrated scene distinguishes the current decision from completed and rejected elements, and selection text matches the current frame
 
 ### Requirement: Readable decorative treatment
 Decorative patterns and irregular shapes SHALL remain secondary to headings, controls, pseudocode, formulas, metrics, error messages, and the 3D experiment. Functional text and controls SHALL retain sufficient contrast, visible focus, clear disabled and selected states, and usable hit areas at desktop and narrow widths. Essential information SHALL not depend on recognizing a decorative motif, texture, or color alone.
