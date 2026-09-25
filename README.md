@@ -2,9 +2,11 @@
 
 A static, browser-only workbench for learning algorithms through interactive 3D simulations. Explore each algorithm one frame at a time, inspect its state, tune parameters, and share a deterministic experiment by URL.
 
-![A* workbench](docs/screenshots/workbench.png)
+**Live site:** [brucerry.github.io/algo-motion](https://brucerry.github.io/algo-motion/)
 
-Additional views: [3D RRT](docs/screenshots/rrt.png) · [Gradient descent](docs/screenshots/gradient-descent.png) · [Bubble Sort](docs/screenshots/bubble-sort.png) · [0/1 Knapsack](docs/screenshots/knapsack.png) · [N-Queens](docs/screenshots/n-queens.png)
+![Current A* workbench with the algorithm catalog and a completed route](docs/screenshots/workbench.png)
+
+More captures from the live site: [Graph Search comparison](docs/screenshots/comparison.png) · [3D RRT](docs/screenshots/rrt.png) · [Gradient Descent](docs/screenshots/gradient-descent.png) · [Bubble Sort](docs/screenshots/bubble-sort.png) · [0/1 Knapsack](docs/screenshots/knapsack.png) · [N-Queens](docs/screenshots/n-queens.png)
 
 ## What is included
 
