@@ -8,6 +8,17 @@ A static, browser-only workbench for learning algorithms through interactive 3D 
 
 More captures from the live site: [Graph Search comparison](docs/screenshots/comparison.png) · [3D RRT](docs/screenshots/rrt.png) · [Gradient Descent](docs/screenshots/gradient-descent.png) · [Bubble Sort](docs/screenshots/bubble-sort.png) · [0/1 Knapsack](docs/screenshots/knapsack.png) · [N-Queens](docs/screenshots/n-queens.png)
 
+<details>
+<summary>Mobile captures (expand and tap an image for full size)</summary>
+
+| A* workbench                                                                                                                    | Topic navigation                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [![A completed A* route in the mobile workbench](docs/screenshots/mobile-workbench.png)](docs/screenshots/mobile-workbench.png) | [![Algorithm topics in the mobile navigation](docs/screenshots/mobile-algorithms.png)](docs/screenshots/mobile-algorithms.png)       |
+| **Parameters**                                                                                                                  | **Graph Search comparison**                                                                                                          |
+| [![Adjustable A* parameters on mobile](docs/screenshots/mobile-parameters.png)](docs/screenshots/mobile-parameters.png)         | [![Four Graph Search algorithms compared on mobile](docs/screenshots/mobile-comparison.png)](docs/screenshots/mobile-comparison.png) |
+
+</details>
+
 ## What is included
 
 - Graph Search: BFS, Dijkstra, A*, and Depth-First Search on seeded grids rendered in 3D
