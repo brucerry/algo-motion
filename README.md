@@ -1,6 +1,7 @@
 # Algorithm Motion
 
 [![Build and deploy Algorithm Motion](https://github.com/brucerry/algo-motion/actions/workflows/pages.yml/badge.svg)](https://github.com/brucerry/algo-motion/actions/workflows/pages.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 A static, browser-only workbench for learning algorithms through interactive 3D simulations. Explore each algorithm one frame at a time, inspect its state, tune parameters, and share a deterministic experiment by URL.
 
