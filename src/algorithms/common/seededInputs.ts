@@ -1,4 +1,5 @@
 import { createRandom, deriveSeed } from '../../engine/seededRandom'
+import { BINARY_MAX_COUNT, TREE_MAX_COUNT, treeKeyMaximum } from './limits'
 
 function boundedInteger(value: number, min: number, max: number, name: string) {
     if (!Number.isInteger(value) || value < min || value > max)
@@ -12,16 +13,16 @@ export function seededValues(
     min = 1,
     max = 20,
 ): number[] {
-    boundedInteger(count, 0, 160, 'Count')
+    boundedInteger(count, 0, BINARY_MAX_COUNT, 'Count')
     boundedInteger(min, -100, 100, 'Minimum')
-    boundedInteger(max, min, 320, 'Maximum')
+    boundedInteger(max, min, BINARY_MAX_COUNT * 2, 'Maximum')
     const random = createRandom(deriveSeed(seed, salt))
     return Array.from({ length: count }, () => random.integer(min, max))
 }
 
 export function seededUniqueValues(count: number, seed: number, salt: string): number[] {
-    boundedInteger(count, 0, 120, 'Count')
-    const values = Array.from({ length: count <= 24 ? 99 : 999 }, (_, index) => index + 1)
+    boundedInteger(count, 0, TREE_MAX_COUNT, 'Count')
+    const values = Array.from({ length: treeKeyMaximum(count) - 1 }, (_, index) => index + 1)
     const random = createRandom(deriveSeed(seed, salt))
     for (let index = values.length - 1; index > 0; index--) {
         const other = random.integer(0, index)

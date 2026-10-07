@@ -1,4 +1,4 @@
-import type { Frame } from './types'
+import type { Frame, Params } from './types'
 import { MutableTrace, type TraceSource } from './trace'
 import {
     createGrid,
@@ -6,16 +6,16 @@ import {
     type GridAlgorithm,
     type GridEnvironment,
     type GridParams,
-    type GridState,
 } from '../algorithms/grid/grid'
-import type { QueensParams, QueensState } from '../algorithms/backtracking/queens'
+import type { QueensParams } from '../algorithms/backtracking/queens'
 
 export type WorkerTraceInput =
     | { kind: 'grid'; algorithm: GridAlgorithm; params: GridParams; environment?: GridEnvironment }
     | { kind: 'queens'; params: QueensParams }
+    | { kind: 'algorithm'; algorithmId: string; params: Params }
 
 let nextGeneration = 0
-export function workerTrace(input: WorkerTraceInput): TraceSource<GridState | QueensState> {
+export function workerTrace(input: WorkerTraceInput): TraceSource<any> {
     const generationId = ++nextGeneration
     const environment =
         input.kind === 'grid' ? (input.environment ?? createGrid(input.params)) : null
@@ -35,7 +35,7 @@ export function workerTrace(input: WorkerTraceInput): TraceSource<GridState | Qu
         for (const request of requests.values()) request.resolve(null)
         requests.clear()
     }
-    const source = new MutableTrace<GridState | QueensState>(
+    const source = new MutableTrace<any>(
         (index) =>
             new Promise((resolve, reject) => {
                 if (stopped) {

@@ -1045,3 +1045,18 @@ footer button {
         animation: none !important;
     }
 }
+/* Labels stay readable while geometry scales for large experiments. */
+.scene-annotation {
+    display: inline-block;
+    color: var(--text, #273640);
+    background: var(--surface, #fff6e4);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    text-align: center;
+}
+.scene-caption {
+    width: 280px;
+    white-space: normal;
+}

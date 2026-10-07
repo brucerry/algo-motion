@@ -16,6 +16,7 @@ import { workerTrace } from './engine/workerTrace'
 import { ComparisonTraceSet } from './engine/comparisonTrace'
 import {
     comparisonInputLabel,
+    comparisonExplanation,
     comparisonMembers,
     comparisonSharedDefinitions,
     comparisonSpecificDefinitions,
@@ -246,6 +247,17 @@ export default function App() {
                         comparison[id] = eagerTrace(
                             runTwoSum(effective as Parameters<typeof runTwoSum>[0], sortedArray),
                         )
+                    else if (id === 'n-queens')
+                        comparison[id] = workerTrace({
+                            kind: 'queens',
+                            params: effective as { size: number },
+                        })
+                    else if (member.steps)
+                        comparison[id] = workerTrace({
+                            kind: 'algorithm',
+                            algorithmId: id,
+                            params: effective,
+                        })
                     else comparison[id] = eagerTrace(member.run(effective))
                 }
             } else if (gridIds.includes(algorithmId)) {
@@ -256,6 +268,8 @@ export default function App() {
                 })
             } else if (algorithmId === 'n-queens') {
                 normal = workerTrace({ kind: 'queens', params: params as { size: number } })
+            } else if (module.steps) {
+                normal = workerTrace({ kind: 'algorithm', algorithmId, params })
             } else normal = eagerTrace(module.run(params))
         } catch (error) {
             for (const source of Object.values(comparison ?? {})) source.dispose()
@@ -488,6 +502,7 @@ export default function App() {
         )
         setCompareShared(settings.shared)
         setCompareParams(settings.individual)
+        setNotice(settings.notice)
         setCompareId(algorithmId)
         setCompare(true)
     }
@@ -1082,14 +1097,8 @@ export default function App() {
                                 })}
                             </div>
                             <p className="small-note">
-                                {module.meta.category === 'Graph Search'
-                                    ? compareShared.weightMode === 'terrain'
-                                        ? 'BFS optimizes hop count; Dijkstra minimizes weighted terrain cost. DFS returns its first route. Browser timing is not a benchmark.'
-                                        : 'On a uniform grid without diagonals, Dijkstra and BFS can find the same minimum-hop route. DFS returns its first route. Browser timing is not a benchmark.'
-                                    : module.meta.category === 'Array Techniques'
-                                      ? 'Both methods use the same sorted array. Target value and target sum ask different questions.'
-                                      : 'These algorithms solve different optimization problems. Their objective values and schedule sizes are not directly comparable.'}{' '}
-                                Replay positions do not represent equivalent operations.
+                                {comparisonExplanation(module.meta.category, compareShared)} Replay
+                                positions do not represent equivalent operations.
                             </p>
                         </section>
                     )}

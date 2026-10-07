@@ -128,7 +128,7 @@ function pathToRoot(nodes: RrtNode[], goalId: number): number[] {
     return path.reverse()
 }
 
-export function runRrt(params: RrtParams): SimulationRun<RrtState> {
+export function validateRrtParameters(params: RrtParams): void {
     if (
         !Number.isInteger(params.maxIterations) ||
         params.maxIterations < 1 ||
@@ -144,6 +144,10 @@ export function runRrt(params: RrtParams): SimulationRun<RrtState> {
         params.goalThreshold > Math.min(2, params.workspace / 4)
     )
         throw new Error('RRT settings exceed safe limits.')
+}
+
+export function runRrt(params: RrtParams): SimulationRun<RrtState> {
+    validateRrtParameters(params)
     const { start, goal, obstacles } = createWorkspace(params)
     const random = createRandom(deriveSeed(params.seed, 'rrt-samples'))
     const nodes: RrtNode[] = [{ id: 0, position: start, parent: null, cost: 0 }]

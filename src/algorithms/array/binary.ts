@@ -1,5 +1,6 @@
 import type { Frame, Metric, Params, SimulationRun } from '../../engine/types'
 import { seededValues } from '../common/seededInputs'
+import { BINARY_MAX_COUNT } from '../common/limits'
 import type { ArrayVisualItem } from '../common/ArrayItems'
 
 export type BinaryParams = Params & { count: number; target: number; seed: number }
@@ -24,7 +25,7 @@ export function runBinary(params: BinaryParams, input?: number[]): SimulationRun
               Math.max(20, params.count * 2),
           ).sort((a, b) => a - b)
     if (
-        values.length > 160 ||
+        values.length > BINARY_MAX_COUNT ||
         values.some((value, index) => index > 0 && value < values[index - 1])
     )
         throw new Error('Binary search requires a bounded ascending array.')

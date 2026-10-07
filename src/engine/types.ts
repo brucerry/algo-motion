@@ -1,4 +1,5 @@
 import type { ComponentType, LazyExoticComponent } from 'react'
+import type { ProducedStep } from './steps'
 
 export type ParamValue = string | number | boolean
 export type Params = Record<string, ParamValue>
@@ -80,6 +81,8 @@ export type AlgorithmModule<S, P extends Params = Params> = {
     pseudocode: PseudocodeLine[]
     education: Education
     run: (params: P) => SimulationRun<S>
+    steps?: (params: P) => Generator<ProducedStep<S>, SimulationRun<S>['outcome']>
     renderer: Renderer<S>
+    cameraForState?: (state: S) => AlgorithmMeta['camera']
     inspect: (state: S, id: string) => Metric[] | null
 }

@@ -1,23 +1,25 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Line, Sphere } from '@react-three/drei'
+import { Html, Line, Sphere } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { BufferAttribute, BufferGeometry, Color, InstancedMesh, Object3D } from 'three'
 import type { SceneProps } from '../../engine/types'
 import { scenePalette } from '../../visual/scenePalette'
 import { tactileTexture } from '../../visual/tactileTexture'
 import type { RrtState } from './rrt'
+import type { RrtStarState } from './rrtStar'
 
 export default function RrtScene({ state, onSelect, selectedId, theme }: SceneProps<RrtState>) {
     const nodeMesh = useRef<InstancedMesh>(null)
     const marker = useMemo(() => new Object3D(), [])
     const colors = scenePalette(theme)
+    const star = state as Partial<RrtStarState>
     useLayoutEffect(() => {
         if (!nodeMesh.current) return
         const path = new Set(state.path)
         for (const node of state.nodes) {
             marker.position.set(...node.position)
             const size =
-                node.id === 0 || (node.id === state.nodes.length - 1 && path.has(node.id))
+                node.id === 0 || node.id === state.path.at(-1)
                     ? 0.23
                     : node.id === state.newestNode
                       ? 0.19
@@ -34,12 +36,15 @@ export default function RrtScene({ state, onSelect, selectedId, theme }: ScenePr
                         ? colors.solution
                         : node.id === state.newestNode
                           ? colors.newest
-                          : colors.tree
+                          : star.neighbors?.includes(node.id)
+                            ? colors.frontier
+                            : colors.tree
             nodeMesh.current.setColorAt(node.id, new Color(color))
         }
         nodeMesh.current.count = state.nodes.length
         nodeMesh.current.instanceMatrix.needsUpdate = true
         if (nodeMesh.current.instanceColor) nodeMesh.current.instanceColor.needsUpdate = true
+        nodeMesh.current.computeBoundingSphere()
     }, [state, selectedId, marker, colors])
 
     const geometry = useMemo(() => {
@@ -109,6 +114,25 @@ export default function RrtScene({ state, onSelect, selectedId, theme }: ScenePr
                     color={colors.newest}
                     lineWidth={4}
                 />
+            )}
+            {star.rewired?.map((id) => (
+                <Line
+                    key={`rewired-${id}`}
+                    points={[
+                        state.nodes[state.nodes[id].parent!].position,
+                        state.nodes[id].position,
+                    ]}
+                    color={colors.frontier}
+                    lineWidth={5}
+                />
+            ))}
+            {star.radius !== undefined && (
+                <Html center position={[0, 5, 0]} style={{ pointerEvents: 'none' }}>
+                    <span className="scene-annotation">
+                        Rewires: {star.rewires} · radius {star.radius.toFixed(2)} · best route so
+                        far
+                    </span>
+                </Html>
             )}
             {selectedNode && (
                 <Sphere args={[0.27, 12, 9]} position={selectedNode.position}>

@@ -14,16 +14,30 @@ const showcaseIds = [
     'interval-scheduling',
     'binary-search',
     'sorted-two-sum',
+    'insertion-sort',
+    'quick-sort',
+    'merge-sort',
+    'inorder-traversal',
+    'coin-change',
+    'sudoku',
+    'rrt-star',
 ]
 const maximumSizes: Record<string, Record<string, number>> = {
     dfs: { width: 240, depth: 240 },
     'bubble-sort': { count: 140 },
-    'bst-search': { count: 120 },
+    'bst-search': { count: 2048 },
     knapsack: { count: 80, capacity: 180 },
     'n-queens': { size: 80 },
     'interval-scheduling': { count: 120 },
-    'binary-search': { count: 160 },
+    'binary-search': { count: 16384 },
     'sorted-two-sum': { count: 160 },
+    'insertion-sort': { count: 140 },
+    'quick-sort': { count: 140 },
+    'merge-sort': { count: 140 },
+    'inorder-traversal': { count: 2048 },
+    'coin-change': { amount: 300 },
+    sudoku: { clueCount: 65 },
+    'rrt-star': { maxIterations: 6000 },
 }
 
 describe('showcase catalog contracts', () => {
@@ -42,7 +56,7 @@ describe('showcase catalog contracts', () => {
         expect(SPEEDS).toEqual([0.25, 0.5, 1, 2, 4, 8, 16, 32])
     })
 
-    it('registers the agreed eight showcases once with valid presets', () => {
+    it('registers every showcase once with valid presets', () => {
         expect(new Set(algorithms.map((algorithm) => algorithm.meta.id)).size).toBe(
             algorithms.length,
         )

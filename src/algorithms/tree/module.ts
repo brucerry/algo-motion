@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import type { AlgorithmModule, ParameterDefinition } from '../../engine/types'
 import { inspectBst, runBst, type BstParams, type BstState } from './bst'
+import { TREE_MAX_COUNT, treeKeyMaximum } from '../common/limits'
 
 const parameters: ParameterDefinition[] = [
     {
@@ -9,7 +10,7 @@ const parameters: ParameterDefinition[] = [
         label: 'Node count',
         defaultValue: 9,
         min: 3,
-        max: 120,
+        max: TREE_MAX_COUNT,
         integer: true,
         control: 'slider',
         description: 'Number of distinct keys inserted into the tree.',
@@ -20,8 +21,8 @@ const parameters: ParameterDefinition[] = [
         label: 'Target key',
         defaultValue: 50,
         min: 0,
-        max: 1000,
-        bounds: (params) => ({ max: Number(params.count) <= 24 ? 100 : 1000 }),
+        max: treeKeyMaximum(TREE_MAX_COUNT),
+        bounds: (params) => ({ max: treeKeyMaximum(Number(params.count)) }),
         integer: true,
         description: 'Key to search for, including values that may be absent.',
     },
@@ -44,6 +45,7 @@ export const bstModule: AlgorithmModule<BstState> = {
     presets: [
         { name: 'Search a tree', values: { count: 8, target: 50, seed: 32 } },
         { name: 'Absent key', values: { count: 10, target: 0, seed: 19 } },
+        { name: 'Large tree', values: { count: TREE_MAX_COUNT, target: 0, seed: 19 } },
     ],
     pseudocode: [
         { id: 1, text: 'current ← root' },
@@ -81,5 +83,9 @@ export const bstModule: AlgorithmModule<BstState> = {
     },
     run: (params) => runBst(params as BstParams),
     renderer: lazy(() => import('./BstScene')),
+    cameraForState: (state) =>
+        state.nodes.length > 120
+            ? { distance: 23, targetY: 0, perspective: [0, 11, 18] }
+            : undefined,
     inspect: inspectBst,
 }

@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import type { AlgorithmModule, ParameterDefinition } from '../../engine/types'
 import { inspectBinary, runBinary, type BinaryParams, type BinaryState } from './binary'
 import { inspectTwoSum, runTwoSum, type TwoSumParams, type TwoSumState } from './twoSum'
+import { BINARY_MAX_COUNT } from '../common/limits'
 
 const common: ParameterDefinition[] = [
     {
@@ -50,14 +51,18 @@ export const binaryModule: AlgorithmModule<BinaryState> = {
         camera: { distance: 11, targetY: 0.7, perspective: [0, 7, 10] },
     },
     parameters: [
-        ...common,
+        ...common.map((definition) =>
+            definition.key === 'count' && definition.type === 'number'
+                ? { ...definition, max: BINARY_MAX_COUNT, control: 'number' as const }
+                : definition,
+        ),
         {
             type: 'number',
             key: 'target',
             label: 'Target value',
             defaultValue: 10,
             min: 0,
-            max: 321,
+            max: BINARY_MAX_COUNT * 2 + 1,
             bounds: (params) => ({ max: valueMaximum(Number(params.count)) + 1 }),
             integer: true,
             description: 'Find the first matching index, if present.',
@@ -67,6 +72,8 @@ export const binaryModule: AlgorithmModule<BinaryState> = {
     presets: [
         { name: 'Short array', values: { count: 6, target: 10, seed: 21 } },
         { name: 'Missing target', values: { count: 12, target: 0, seed: 77 } },
+        { name: 'Large array', values: { count: 4096, target: 0, seed: 77 } },
+        { name: 'Maximum size', values: { count: BINARY_MAX_COUNT, target: 0, seed: 21 } },
     ],
     pseudocode: [
         { id: 1, text: 'low ← 0; high ← last index' },
@@ -87,6 +94,10 @@ export const binaryModule: AlgorithmModule<BinaryState> = {
     },
     run: (params) => runBinary(params as BinaryParams),
     renderer: lazy(() => import('./BinaryScene')),
+    cameraForState: (state) =>
+        state.items.length > 160
+            ? { distance: 24, targetY: 0.4, perspective: [0, 18, 18] }
+            : undefined,
     inspect: inspectBinary,
 }
 

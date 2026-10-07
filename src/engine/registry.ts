@@ -8,6 +8,11 @@ import { knapsackModule } from '../algorithms/dp/module'
 import { queensModule } from '../algorithms/backtracking/module'
 import { intervalModule } from '../algorithms/greedy/module'
 import { binaryModule, twoSumModule } from '../algorithms/array/modules'
+import { insertionModule, quickModule, mergeModule } from '../algorithms/sorting/sortModules'
+import { traversalModule } from '../algorithms/tree/traversalModule'
+import { coinModule } from '../algorithms/dp/coinModule'
+import { sudokuModule } from '../algorithms/backtracking/sudokuModule'
+import { rrtStarModule } from '../algorithms/rrt/starModule'
 
 export type RegisteredAlgorithm = AlgorithmModule<any>
 export const algorithms: RegisteredAlgorithm[] = [
@@ -24,6 +29,13 @@ export const algorithms: RegisteredAlgorithm[] = [
     intervalModule,
     binaryModule,
     twoSumModule,
+    insertionModule,
+    quickModule,
+    mergeModule,
+    traversalModule,
+    coinModule,
+    sudokuModule,
+    rrtStarModule,
 ]
 export const algorithmById = (id: string | null | undefined): RegisteredAlgorithm | undefined =>
     algorithms.find((algorithm) => algorithm.meta.id === id)

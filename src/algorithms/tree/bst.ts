@@ -1,5 +1,6 @@
 import type { Frame, Metric, Params, SimulationRun } from '../../engine/types'
 import { seededUniqueValues } from '../common/seededInputs'
+import { TREE_MAX_COUNT } from '../common/limits'
 
 export type BstParams = Params & { count: number; seed: number; target: number }
 export type TreeNode = {
@@ -21,7 +22,7 @@ export type BstState = {
 }
 
 export function buildBst(values: number[]): TreeNode[] {
-    if (values.length > 120 || new Set(values).size !== values.length)
+    if (values.length > TREE_MAX_COUNT || new Set(values).size !== values.length)
         throw new Error('Tree keys must be distinct and bounded.')
     const nodes: TreeNode[] = []
     for (const key of values) {
@@ -43,13 +44,17 @@ export function buildBst(values: number[]): TreeNode[] {
         }
     }
     let rank = 0
-    const assign = (id: number | null) => {
-        if (id === null) return
-        assign(nodes[id].left)
-        nodes[id].x = rank++
-        assign(nodes[id].right)
+    const stack: number[] = []
+    let cursor: number | null = nodes.length ? 0 : null
+    while (cursor !== null || stack.length) {
+        while (cursor !== null) {
+            stack.push(cursor)
+            cursor = nodes[cursor].left
+        }
+        cursor = stack.pop()!
+        nodes[cursor].x = rank++
+        cursor = nodes[cursor].right
     }
-    assign(nodes.length ? 0 : null)
     nodes.forEach((node) => {
         node.x -= (nodes.length - 1) / 2
     })

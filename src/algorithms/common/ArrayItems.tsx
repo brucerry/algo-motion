@@ -1,6 +1,7 @@
 import { Edges, Html } from '@react-three/drei'
 import type { SceneProps } from '../../engine/types'
 import { scenePalette } from '../../visual/scenePalette'
+import LargeArrayItems from './LargeArrayItems'
 
 export type ArrayVisualItem = { id: number; value: number }
 
@@ -9,6 +10,7 @@ export default function ArrayItems({
     active = [],
     completed = [],
     result = [],
+    liftedId = null,
     selectedId,
     onSelect,
     theme,
@@ -17,10 +19,23 @@ export default function ArrayItems({
     active?: number[]
     completed?: number[]
     result?: number[]
+    liftedId?: number | null
     selectedId: SceneProps<unknown>['selectedId']
     onSelect: SceneProps<unknown>['onSelect']
     theme: SceneProps<unknown>['theme']
 }) {
+    if (items.length > 160)
+        return (
+            <LargeArrayItems
+                items={items}
+                active={active}
+                completed={completed}
+                result={result}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                theme={theme}
+            />
+        )
     const colors = scenePalette(theme)
     const spacing = 0.9
     const center = ((items.length - 1) * spacing) / 2
@@ -42,7 +57,7 @@ export default function ArrayItems({
                         ? colors.visited
                         : colors.unvisited
                 return (
-                    <group key={item.id} position={[x, 0, 0]}>
+                    <group key={item.id} position={[x, item.id === liftedId ? 0.65 : 0, 0]}>
                         <mesh
                             position={[0, height / 2, 0]}
                             onClick={(event) => {

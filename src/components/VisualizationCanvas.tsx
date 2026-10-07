@@ -11,21 +11,24 @@ export type CameraCommand = { preset: 'perspective' | 'top' | 'side'; revision: 
 function CameraRig({
     command,
     algorithm,
+    state,
 }: {
     command: CameraCommand
     algorithm: RegisteredAlgorithm
+    state: unknown
 }) {
     const controls = useRef<OrbitControlsImpl>(null)
     const { camera } = useThree()
+    const framing = algorithm.cameraForState?.(state) ?? algorithm.meta.camera
     useEffect(() => {
-        const distance = algorithm.meta.camera?.distance ?? 21
-        const targetY = algorithm.meta.camera?.targetY ?? 0
+        const distance = framing?.distance ?? 21
+        const targetY = framing?.targetY ?? 0
         const position: [number, number, number] =
             command.preset === 'top'
                 ? [0, distance, 0.01]
                 : command.preset === 'side'
                   ? [0, targetY + distance * 0.35, distance]
-                  : (algorithm.meta.camera?.perspective ?? [
+                  : (framing?.perspective ?? [
                         distance * 0.7,
                         targetY + distance * 0.72,
                         distance * 0.7,
@@ -34,7 +37,16 @@ function CameraRig({
         camera.lookAt(0, targetY, 0)
         controls.current?.target.set(0, targetY, 0)
         controls.current?.update()
-    }, [command, algorithm, camera])
+    }, [
+        command,
+        algorithm,
+        camera,
+        framing?.distance,
+        framing?.targetY,
+        framing?.perspective?.[0],
+        framing?.perspective?.[1],
+        framing?.perspective?.[2],
+    ])
     return (
         <OrbitControls
             ref={controls}
@@ -90,7 +102,7 @@ export default function VisualizationCanvas({
                     intensity={theme === 'dark' ? 21 : 13}
                     color={palette.frontier}
                 />
-                <CameraRig command={cameraCommand} algorithm={algorithm} />
+                <CameraRig command={cameraCommand} algorithm={algorithm} state={frame.state} />
                 <Suspense fallback={null}>
                     <Renderer
                         key={algorithm.meta.id}

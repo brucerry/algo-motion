@@ -14,7 +14,7 @@ describe('seeded showcase inputs', () => {
     })
 
     it('rejects oversized inputs', () => {
-        expect(() => seededValues(161, 1, 'array')).toThrow()
+        expect(() => seededValues(16385, 1, 'array')).toThrow()
         expect(() => seededUniqueValues(-1, 1, 'tree')).toThrow()
         expect(() => seededIntervals(121, 1)).toThrow()
     })

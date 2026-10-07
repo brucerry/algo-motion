@@ -1,5 +1,10 @@
 import { gridSteps } from '../algorithms/grid/steps'
 import { queenSteps } from '../algorithms/backtracking/steps'
+import { sortSteps, type SortParams } from '../algorithms/sorting/strategies'
+import { traversalSteps, type TraversalParams } from '../algorithms/tree/traversal'
+import { coinSteps, type CoinParams } from '../algorithms/dp/coinChange'
+import { sudokuSteps, type SudokuParams } from '../algorithms/backtracking/sudoku'
+import { rrtStarSteps, type RrtStarParams } from '../algorithms/rrt/rrtStar'
 import type { ProducedStep } from '../engine/steps'
 import type { Frame, SimulationRun } from '../engine/types'
 import type { WorkerTraceInput } from '../engine/workerTrace'
@@ -25,6 +30,24 @@ const CHECKPOINT_SIZE = 6
 function steps(): AnyGenerator {
     if (!input) throw new Error('Missing trace input.')
     if (input.kind === 'grid') return gridSteps(input.algorithm, input.params, input.environment!)
+    if (input.kind === 'algorithm') {
+        switch (input.algorithmId) {
+            case 'insertion-sort':
+            case 'quick-sort':
+            case 'merge-sort':
+                return sortSteps(input.algorithmId, input.params as SortParams)
+            case 'inorder-traversal':
+                return traversalSteps(input.params as TraversalParams)
+            case 'coin-change':
+                return coinSteps(input.params as CoinParams)
+            case 'sudoku':
+                return sudokuSteps(input.params as SudokuParams)
+            case 'rrt-star':
+                return rrtStarSteps(input.params as RrtStarParams)
+            default:
+                throw new Error('Algorithm does not provide incremental replay.')
+        }
+    }
     return queenSteps(input.params)
 }
 function cacheFrame(frame: Frame<any>) {
