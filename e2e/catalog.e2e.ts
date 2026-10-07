@@ -21,7 +21,11 @@ test('every topic is reachable from desktop and mobile navigation', async ({ pag
             const disclosure = page.getByRole('button', { name: category, exact: true })
             if ((await disclosure.getAttribute('aria-expanded')) !== 'true')
                 await disclosure.click()
-            const item = page.locator('.algorithm-item').filter({ hasText: algorithm })
+            const item = page.getByRole('button', {
+                name: algorithm,
+                exact: true,
+                includeHidden: true,
+            })
             await expect(item).toBeVisible()
             await item.click()
             await expect(page.getByRole('heading', { name: heading })).toBeVisible()
@@ -234,7 +238,7 @@ test('category disclosure and camera controls work with keyboard on a narrow scr
     await planning.focus()
     await planning.press('Enter')
     await expect(planning).toHaveAttribute('aria-expanded', 'true')
-    await page.getByRole('button', { name: /^RRT/ }).click()
+    await page.getByRole('button', { name: 'RRT', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Rapidly-exploring Random Tree' })).toBeVisible()
     await page.getByRole('button', { name: 'Top', exact: true }).click()
     await page.getByRole('button', { name: 'Side', exact: true }).click()

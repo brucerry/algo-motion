@@ -25,12 +25,12 @@ More captures from the live site: [Graph Search comparison](docs/screenshots/com
 ## What is included
 
 - Graph Search: BFS, Dijkstra, A*, and Depth-First Search on seeded grids rendered in 3D
-- Collision-aware RRT in a true 3D workspace
+- Collision-aware RRT and RRT* with cost-aware rewiring and continued route improvement in a true 3D workspace
 - Optimization: gradient descent on three selectable objective surfaces and greedy interval scheduling
-- Sorting: stable Bubble Sort with comparisons, swaps, and early stopping
-- Trees: Binary Search Tree Search with seeded keys and a visible search path
-- Dynamic Programming: 0/1 Knapsack with table dependencies and subset reconstruction
-- Backtracking: N-Queens with candidate, rejection, placement, and reversal steps
+- Sorting: Bubble Sort, Insertion Sort, Quick Sort, and Merge Sort with comparisons, shifts, partitions, and merge buffers
+- Trees: Binary Search Tree Search and In-order Traversal with seeded keys, a visible stack, and ascending output
+- Dynamic Programming: 0/1 Knapsack and minimum-coin Coin Change with table dependencies and reconstruction
+- Backtracking: N-Queens and seeded Sudoku Solver with candidate, rejection, placement, and reversal steps
 - Array Techniques: Binary Search and Sorted Two-Sum with visible indices and pointer moves
 - Playback, reverse stepping, scrubbing, speed control, camera controls, and scene selection
 - Algorithm-specific parameters, presets, visible random seeds, URL sharing, and local preferences
@@ -78,6 +78,12 @@ Step sound is off each time the page opens. Select **Sound off** in the transpor
 
 The parameter panel is generated from each algorithm's schema. Numeric controls show their allowed range. Dependent ranges update with the data size: search targets, knapsack capacity, and RRT geometry controls adjust when their input changes. An out-of-range dependent value moves to the nearest allowed value with a notice; a direct out-of-range edit is rejected. Valid changes rebuild the run and reset the timeline. Presets are editable after loading. Randomize chooses a new visible seed. The URL records the algorithm and its validated parameters, including seed; copying it reproduces the experiment. A malformed value falls back to a safe default and shows a notice.
 
+Binary Search supports up to **16,384 items** and BST Search up to **2,048 nodes**, with larger presets. Every item remains in the scene and can be selected. Large arrays wrap across rows, and large trees wrap their in-order ranks across a 3D layout while height shows depth. Binary Search still takes only logarithmically many comparisons; larger input adds genuine halvings rather than artificial steps. BST search takes O(h) for tree height h and is logarithmic only when balanced.
+
+The expanded catalog contains **20 algorithms across eight topics**. Sorting compares the same seeded array for all four strategies; Trees shares a BST for search and traversal; Motion Planning shares obstacle geometry for RRT and RRT*. Shared controls use the common valid range, so entering Array Techniques comparison from a Binary Search above 160 items adjusts the comparison size to 160 with a notice. DP and Backtracking retain separate, labeled problem inputs. Insertion and Merge Sort preserve equal-item order; Quick Sort uses last-item Lomuto partition and is not stable.
+
+Sudoku generates seeded 9×9 puzzles with 24–65 clues and solves the first valid completion; uniqueness is not guaranteed. Its **No solution** preset exposes exhaustive failure. Coin Change allows three positive denominations to be reused and reconstructs the minimum number of coins, including unreachable and zero-amount cases. RRT* keeps improving after its first route until its configured budget; its guide cites [Karaman and Frazzoli's original paper](https://arxiv.org/abs/1105.1186) and explains why a finite run does not guarantee global optimality.
+
 Grid search and N-Queens generate every step until they find a result or exhaust their search. During generation, the timeline shows a pending total and lets you inspect available steps, including earlier ones. You can cancel a long search; cancellation is shown as incomplete. RRT and gradient descent retain their adjustable iteration limits. When a run ends without a route or solution, reaches a configured limit, is cancelled, or fails, a message beside the simulation explains the result even if the Guide tab is open.
 
 Compare is available when a topic has at least two implemented algorithms. **Graph Search** compares BFS, DFS, Dijkstra, and A* on one grid, including the same obstacles, terrain costs, and movement rules. **Array Techniques** uses one sorted array for Binary Search and Two Pointers, with separate target value and target sum controls. **Optimization** shows Gradient Descent and Interval Scheduling with their own inputs and clearly labeled results; their metrics are not ranked against each other. The shared timeline aligns replay positions, not equivalent operations. A run that finishes early holds its final frame, and each run retains its own outcome and cancellation status.
@@ -96,11 +102,11 @@ The application keeps computation, state, rendering, UI controls, and learning c
 | Grid search      | src/algorithms/grid                                           | Shared environment and neighbor rules, BFS/Dijkstra/A*/DFS runs, 3D grid scene           |
 | RRT              | src/algorithms/rrt                                            | 3D sampling, collision checks, tree frames, RRT scene                                    |
 | Gradient descent | src/algorithms/gradient                                       | Objective/gradient pairs, descent frames, surface scene                                  |
-| New showcases    | src/algorithms/sorting, tree, dp, backtracking, greedy, array | Pure runners, illustrated scenes, and learning content for seven new non-grid algorithms |
+| Topic algorithms | src/algorithms/sorting, tree, dp, backtracking, greedy, array | Pure runners, illustrated scenes, and learning content across the expanded topics        |
 | Seeded inputs    | src/algorithms/common                                         | Bounded deterministic arrays, distinct keys, and intervals                               |
 | Shared UI        | src/components and src/App.tsx                                | Schema-driven controls, viewport, playback, learning panels                              |
 
-Every displayed frame contains algorithm state, active pseudocode lines, an event, a current-step explanation, and metrics. Grid search and N-Queens generate frames incrementally in a browser worker and recreate uncached steps deterministically when you seek backward. Other algorithms still return immutable, indexed frames. The renderer consumes one frame's state and never runs the algorithm itself. This supports reverse stepping, scrubbing, and deterministic replay without keeping every large search snapshot in memory.
+Every displayed frame contains algorithm state, active pseudocode lines, an event, a current-step explanation, and metrics. Grid search, N-Queens, and all seven new algorithms generate frames incrementally in a browser worker and recreate uncached steps deterministically when you seek backward. Other algorithms return immutable, indexed frames. A module can provide a `steps` generator and register its pure producer in src/workers/traceWorker.ts to opt into lazy replay and cancellation. The renderer consumes one frame's state and never runs the algorithm itself. This supports reverse stepping, scrubbing, and deterministic replay without keeping every large search snapshot in memory.
 
 The parameter schema is a discriminated union of number, boolean, select, and seed definitions. It drives both the panel and input/URL validation. Numeric definitions declare finite minimum and maximum values, a step, and an optional slider control. Algorithms can add their own parameter keys without changing the shared panel.
 

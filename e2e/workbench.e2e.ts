@@ -70,7 +70,7 @@ test('workbench plays, changes algorithms, and replays a shared URL', async ({ p
     await page.reload()
     await expect(page).toHaveURL(url)
     await expandCategory(page, 'Motion Planning')
-    await page.getByRole('button', { name: /^RRT/ }).click()
+    await page.getByRole('button', { name: 'RRT', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Rapidly-exploring Random Tree' })).toBeVisible()
     await expandCategory(page, 'Optimization')
     await page.getByRole('button', { name: /^Gradient Descent/ }).click()
@@ -229,7 +229,7 @@ test('step sounds require opt-in and follow only displayed step transitions', as
     await expect(page.getByText('Step 4 /', { exact: false })).toBeVisible()
     expect(await cueCount(page)).toBe(3)
     await expandCategory(page, 'Motion Planning')
-    await page.getByRole('button', { name: /^RRT/ }).click()
+    await page.getByRole('button', { name: 'RRT', exact: true }).click()
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).fill('1')
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).blur()
     await expandCategory(page, 'Graph Search')
@@ -386,7 +386,7 @@ test('learning companions reflect success, iteration limit, and reduced motion',
     await expect(page.locator('.server-slot')).toHaveAttribute('data-server-phase', 'burnout')
     await expect(page.locator('.outcome-badge')).toContainText('Completed')
     await expandCategory(page, 'Motion Planning')
-    await page.getByRole('button', { name: /^RRT/ }).click()
+    await page.getByRole('button', { name: 'RRT', exact: true }).click()
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).fill('1')
     await page.getByRole('spinbutton', { name: 'Maximum iterations' }).blur()
     await expect(page.locator('.server-slot')).toHaveAttribute('data-server-phase', 'ready')
@@ -411,7 +411,7 @@ test('all algorithm families render complete runs and guides', async ({ page }) 
         ['Graph Search', /^Breadth-First Search/, 'Breadth-First Search'],
         ['Graph Search', /^Dijkstra/, 'Dijkstra'],
         ['Graph Search', /^A\*/, 'A* Search'],
-        ['Motion Planning', /^RRT/, 'Rapidly-exploring Random Tree'],
+        ['Motion Planning', /^RRT$/, 'Rapidly-exploring Random Tree'],
         ['Optimization', /^Gradient Descent/, 'Gradient Descent'],
     ] as const) {
         await expandCategory(page, category)

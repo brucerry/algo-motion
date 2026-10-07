@@ -72,9 +72,15 @@ test('Optimization compares separate inputs without ranking unrelated outcomes',
     await expect(page.getByRole('heading', { name: 'Greedy Interval Scheduling' })).toBeVisible()
 })
 
-test('single-algorithm topics have no comparison action', async ({ page }) => {
+test('expanded Sorting compares all four strategies', async ({ page }) => {
     await page.goto('/#/algorithm/bubble-sort')
-    await expect(page.getByRole('button', { name: 'Compare topic' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Compare topic' }).click()
+    await expect(
+        page.getByRole('region', { name: 'Topic comparison' }).locator('.comparison-card'),
+    ).toHaveCount(4)
+    await expect(page.getByRole('region', { name: 'Topic comparison' })).toContainText(
+        'same values',
+    )
 })
 
 test('comparison tabs and scoped controls work by keyboard on a narrow screen', async ({
