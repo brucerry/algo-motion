@@ -231,6 +231,10 @@ footer button:hover,
     transform: rotate(-4deg);
 }
 
+.sketch-icon-moon {
+    transform: none;
+}
+
 .algorithm-item {
     border-color: transparent;
     box-shadow: none;

@@ -68,9 +68,7 @@ const iconPaths: Record<SketchIconName, ReactNode> = {
             <path d="M12 2.1v2M12 19.9v2M2 12h2M20 12h2M4.8 4.7l1.4 1.4m11.6 11.7 1.5 1.5M19.2 4.7l-1.5 1.4M6.2 17.8l-1.4 1.5" />
         </>
     ),
-    moon: (
-        <path d="M18.8 16.8C12.5 19 6.4 13 8.5 5.1c-.2 5.1 4.2 8.4 9 8.1 3.1-.2 5.5-2.2 7-5.3Z" />
-    ),
+    moon: <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
     help: (
         <>
             <path d="M9.2 8.5c.3-2 1.9-3.2 4-3 2 .3 3.5 1.8 3.3 3.7-.2 2.9-3.8 2.7-3.8 5.3" />
@@ -113,7 +111,7 @@ const iconPaths: Record<SketchIconName, ReactNode> = {
 export function SketchIcon({ name, size = 18 }: { name: SketchIconName; size?: number }) {
     return (
         <svg
-            className="sketch-icon"
+            className={`sketch-icon sketch-icon-${name}`}
             width={size}
             height={size}
             viewBox="0 0 24 24"
