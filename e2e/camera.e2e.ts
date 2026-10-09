@@ -8,6 +8,20 @@ declare global {
     }
 }
 
+async function waitForCamera(page: Page, fiberUrl: string) {
+    // A visible canvas can precede the Fiber root and controller on slower devices.
+    await expect
+        .poll(() =>
+            page.evaluate(async (url) => {
+                const { _roots } = await import(/* @vite-ignore */ url)
+                return Boolean(
+                    _roots.get(document.querySelector('canvas'))?.store.getState().controls,
+                )
+            }, fiberUrl),
+        )
+        .toBe(true)
+}
+
 async function motionSamples(page: Page, fiberUrl: string, count = 40): Promise<number[][]> {
     return page.evaluate(
         async ({ url, count }) => {
@@ -59,6 +73,7 @@ async function fullVerticalTurn(
 ) {
     const canvas = page.locator('canvas')
     await canvas.scrollIntoViewIfNeeded()
+    await waitForCamera(page, fiberUrl)
     const box = (await canvas.boundingBox())!
     const initial = await readPose(page, fiberUrl)
     const eye = initial.position.map((value, i) => value - initial.target[i])
@@ -202,6 +217,7 @@ test('drag motion eases to rest and camera presets stop remaining momentum', asy
     await page.setViewportSize({ width: 1024, height: 768 })
     await page.goto('/#/algorithm/rrt')
     await page.locator('canvas').scrollIntoViewIfNeeded()
+    await waitForCamera(page, fiberUrl)
     const box = (await page.locator('canvas').boundingBox())!
     const drag = async () => {
         await page.mouse.move(box.x + box.width * 0.45, box.y + box.height * 0.4)

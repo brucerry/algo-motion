@@ -280,24 +280,47 @@ test('maximum showcase inputs keep playback and honest outcomes usable', async (
     expect(errors).toEqual([])
 })
 
-test('original algorithms accept expanded input maxima in the browser', async ({ page }) => {
-    test.setTimeout(120000)
-    await page.setViewportSize({ width: 1440, height: 900 })
-    const errors: string[] = []
-    page.on('pageerror', (error) => errors.push(error.message))
-    for (const id of ['bfs', 'dijkstra', 'astar']) {
+for (const id of ['bfs', 'dijkstra', 'astar']) {
+    test(`${id} accepts expanded input maxima in the browser`, async ({ page }) => {
+        test.setTimeout(120000)
+        await page.setViewportSize({ width: 1440, height: 900 })
+        const errors: string[] = []
+        page.on('pageerror', (error) => errors.push(error.message))
         await page.goto(`/#/algorithm/${id}?width=240&depth=240&density=0&seed=42`)
         await expect(page.getByLabel('Grid width', { exact: true })).toHaveValue('240')
         await expect(page.getByLabel('Grid depth', { exact: true })).toHaveValue('240')
         await expect(page.locator('canvas')).toBeVisible()
         await page.getByRole('button', { name: 'Last step' }).click()
-        if (await page.getByRole('button', { name: 'Cancel generation' }).isVisible()) {
-            await page.getByRole('button', { name: 'Cancel generation' }).click()
-            await expect(page.locator('.terminal-message')).toContainText('Cancelled')
-        } else {
-            await expect(page.locator('.outcome-badge')).toHaveText('Completed')
-        }
-    }
+        // Generation can complete between a visibility check and a click. Cancel
+        // only while the control exists, then accept either valid terminal state.
+        await expect
+            .poll(
+                async () => {
+                    await page
+                        .getByRole('button', { name: 'Cancel generation' })
+                        .evaluateAll((buttons) => {
+                            ;(buttons[0] as HTMLButtonElement | undefined)?.click()
+                        })
+                    const cancelled = await page.locator('.terminal-message').allTextContents()
+                    const outcomes = await page.locator('.outcome-badge').allTextContents()
+                    return (
+                        cancelled.some((text) => text.includes('Cancelled')) ||
+                        outcomes.includes('Completed')
+                    )
+                },
+                // A completed trace can still be reconstructing its final large-grid frame.
+                { timeout: 30000 },
+            )
+            .toBe(true)
+        expect(errors).toEqual([])
+    })
+}
+
+test('rrt accepts expanded input maxima in the browser', async ({ page }) => {
+    test.setTimeout(120000)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
     await page.goto(
         '/#/algorithm/rrt?workspace=200&obstacleCount=180&obstacleMin=0.2&obstacleMax=0.2&maxIterations=6000&stepSize=2&goalBias=1&seed=42',
     )
@@ -307,6 +330,14 @@ test('original algorithms accept expanded input maxima in the browser', async ({
     await expect(page.locator('canvas')).toBeVisible()
     await page.getByRole('button', { name: 'Last step' }).click()
     await expect(page.locator('.outcome-badge')).toBeVisible()
+    expect(errors).toEqual([])
+})
+
+test('gradient descent accepts expanded input maxima in the browser', async ({ page }) => {
+    test.setTimeout(120000)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
     await page.goto('/#/algorithm/gradient-descent?maxIterations=3000')
     await expect(page.getByLabel('Maximum iterations', { exact: true })).toHaveValue('3000')
     await expect(page.locator('canvas')).toBeVisible()
