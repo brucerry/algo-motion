@@ -3,200 +3,51 @@
 [![Build and deploy Algorithm Motion](https://github.com/brucerry/algo-motion/actions/workflows/pages.yml/badge.svg)](https://github.com/brucerry/algo-motion/actions/workflows/pages.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-A static, browser-only workbench for learning algorithms through interactive 3D simulations. Explore each algorithm one frame at a time, inspect its state, tune parameters, and share a deterministic experiment by URL.
+Learn algorithms through interactive 3D simulations. Step through a run, inspect its state, tune the input, and share a reproducible experiment by URL.
 
-**Live site:** [brucerry.github.io/algo-motion](https://brucerry.github.io/algo-motion/)
+**[Open the live workbench](https://brucerry.github.io/algo-motion/)**
 
-![Current A* workbench with the algorithm catalog and a completed route](docs/screenshots/workbench.png)
+![A* workbench with the algorithm catalog and a completed route](docs/screenshots/workbench.png)
 
-More captures from the live site: [Graph Search comparison](docs/screenshots/comparison.png) · [3D RRT](docs/screenshots/rrt.png) · [Gradient Descent](docs/screenshots/gradient-descent.png) · [Bubble Sort](docs/screenshots/bubble-sort.png) · [0/1 Knapsack](docs/screenshots/knapsack.png) · [N-Queens](docs/screenshots/n-queens.png)
+[More desktop and mobile screenshots](docs/screenshots.md)
 
-<details>
-<summary>Mobile captures (expand and tap an image for full size)</summary>
+## Explore
 
-| A* workbench                                                                                                                    | Topic navigation                                                                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [![A completed A* route in the mobile workbench](docs/screenshots/mobile-workbench.png)](docs/screenshots/mobile-workbench.png) | [![Algorithm topics in the mobile navigation](docs/screenshots/mobile-algorithms.png)](docs/screenshots/mobile-algorithms.png)       |
-| **Parameters**                                                                                                                  | **Graph Search comparison**                                                                                                          |
-| [![Adjustable A* parameters on mobile](docs/screenshots/mobile-parameters.png)](docs/screenshots/mobile-parameters.png)         | [![Four Graph Search algorithms compared on mobile](docs/screenshots/mobile-comparison.png)](docs/screenshots/mobile-comparison.png) |
+- **21 showcases across eight topics:** Graph Search, Motion Planning, Optimization, Sorting, Trees, Dynamic Programming, Backtracking, and Array Techniques.
+- **Control every step:** play, pause, reverse, scrub, and choose speeds from 0.25× to 32×.
+- **See the reasoning:** synchronized pseudocode, explanations, metrics, selection details, and comparison within a topic.
+- **Make it your own:** editable presets, visible seeds, shareable URLs, notebook/chalkboard themes, and optional step sounds.
+- **Use it anywhere:** desktop and mobile layouts, full 3D camera rotation, keyboard controls, and reduced-motion support.
 
-</details>
+Includes A*, RRT*, Quick/Merge Sort, Sudoku, and a tactile 3×3 Rubik’s Cube. See the [full catalog and input limits](docs/algorithms.md).
 
-## What is included
+The deployed app runs entirely in your browser; no account or backend is required.
 
-- Graph Search: BFS, Dijkstra, A*, and Depth-First Search on seeded grids rendered in 3D
-- Collision-aware RRT and RRT* with cost-aware rewiring and continued route improvement in a true 3D workspace
-- Optimization: gradient descent on three selectable objective surfaces and greedy interval scheduling
-- Sorting: Bubble Sort, Insertion Sort, Quick Sort, and Merge Sort with comparisons, shifts, partitions, and merge buffers
-- Trees: Binary Search Tree Search and In-order Traversal with seeded keys, a visible stack, and ascending output
-- Dynamic Programming: 0/1 Knapsack and minimum-coin Coin Change with table dependencies and reconstruction
-- Backtracking: N-Queens, seeded Sudoku Solver, and a tactile 3×3 Rubik’s Cube with verified two-phase solution replay
-- Array Techniques: Binary Search and Sorted Two-Sum with visible indices and pointer moves
-- Playback, reverse stepping, scrubbing, speed control, camera controls, and scene selection
-- Algorithm-specific parameters, presets, visible random seeds, URL sharing, and local preferences
-- Synchronized pseudocode, explanations, metrics, legends, references, and comparison across algorithms in the same topic
-- Responsive dark and light layouts, keyboard controls, and reduced-motion support
-- A paper-notebook theme with drawn controls and stationary, colorful stickers, plus a saved chalkboard theme
-- Optional step sounds that start muted, a hand-drawn server in Pseudocode, and walking shoes in Current step
+## Quick start
 
-The site does not need a server, database, account, or API after the static files are deployed.
-
-The handwriting display face is [Patrick Hand](https://github.com/google/fonts/tree/main/ofl/patrickhand), distributed under the SIL Open Font License. Its license is included at `public/licenses/PatrickHand-OFL.txt`. Text, code, and formulas retain readable fallback fonts.
-
-## Requirements and local development
-
-Use Node.js 20.19.x or Node.js 22.12 or newer, and npm. The checked-in lockfile makes installs repeatable.
+Use Node.js 20.19.x or Node.js 22.12 or newer, and npm.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open the local address printed by Vite. To validate or preview a production build:
+Open the local URL printed by Vite. To build and preview:
 
 ```bash
-npm run typecheck
-npm test
 npm run build
 npm run preview
 ```
 
-Browser tests use Playwright:
+See [Development](docs/development.md) for validation, browser tests, adding algorithms, and GitHub Pages deployment.
 
-```bash
-npx playwright install chromium
-npm run test:e2e
-```
+## Documentation
 
-On Linux, Chromium may also need system libraries. GitHub Actions installs these with Playwright's dependency installer. The browser tests exercise all eight topics, URLs, parameters, mobile layout, keyboard controls, optional sound, learning-panel characters, and accessibility checks.
-
-## Using the workbench
-
-Expand a topic on the left and choose an algorithm. Topics and algorithms appear in alphabetical order. Use the transport bar to play, pause, step, restart, or scrub. Set the speed from 0.25× to 32×. Drag the 3D view to rotate freely through a full 360° horizontally or vertically, scroll to zoom, and right-drag to pan. On touch screens, drag with one finger to rotate and use two fingers to zoom or pan. The top, side, and default perspective buttons restore an upright camera view. Click a scene item to inspect its current state.
-
-Step sound is off each time the page opens. Select **Sound off** in the transport bar to enable short cues during playback or individual Next/Previous steps, including keyboard stepping. You can mute it again at any time. Scrubbing, jumping, restarting, and switching experiments stay silent. The server in Pseudocode changes from ready to working to playfully burned out at the end of a run. Its meter advances with the displayed step, and its screen scans during playback. The shoes in Current step follow the displayed step. The outcome badge and explanation give the actual result.
-
-The parameter panel is generated from each algorithm's schema. Numeric controls show their allowed range. Dependent ranges update with the data size: search targets, knapsack capacity, and RRT geometry controls adjust when their input changes. An out-of-range dependent value moves to the nearest allowed value with a notice; a direct out-of-range edit is rejected. Valid changes rebuild the run and reset the timeline. Presets are editable after loading. Randomize chooses a new visible seed. The URL records the algorithm and its validated parameters, including seed; copying it reproduces the experiment. A malformed value falls back to a safe default and shows a notice.
-
-Binary Search supports up to **16,384 items** and BST Search up to **2,048 nodes**, with larger presets. Every item remains in the scene and can be selected. Large arrays wrap across rows, and large trees wrap their in-order ranks across a 3D layout while height shows depth. Binary Search still takes only logarithmically many comparisons; larger input adds genuine halvings rather than artificial steps. BST search takes O(h) for tree height h and is logarithmic only when balanced.
-
-The expanded catalog contains **21 algorithms across eight topics**. Sorting compares the same seeded array for all four strategies; Trees shares a BST for search and traversal; Motion Planning shares obstacle geometry for RRT and RRT*. Shared controls use the common valid range, so entering Array Techniques comparison from a Binary Search above 160 items adjusts the comparison size to 160 with a notice. DP and Backtracking retain separate, labeled problem inputs. Insertion and Merge Sort preserve equal-item order; Quick Sort uses last-item Lomuto partition and is not stable.
-
-Sudoku generates seeded 9×9 puzzles with 24–65 clues and solves the first valid completion; uniqueness is not guaranteed. Its **No solution** preset exposes exhaustive failure. Coin Change allows three positive denominations to be reused and reconstructs the minimum number of coins, including unreachable and zero-amount cases. RRT* keeps improving after its first route until its configured budget; its guide cites [Karaman and Frazzoli's original paper](https://arxiv.org/abs/1105.1186) and explains why a finite run does not guarantee global optimality.
-
-Grid search and N-Queens generate every step until they find a result or exhaust their search. During generation, the timeline shows a pending total and lets you inspect available steps, including earlier ones. You can cancel a long search; cancellation is shown as incomplete. RRT and gradient descent retain their adjustable iteration limits. When a run ends without a route or solution, reaches a configured limit, is cancelled, or fails, a message beside the simulation explains the result even if the Guide tab is open.
-
-Compare is available when a topic has at least two implemented algorithms. **Graph Search** compares BFS, DFS, Dijkstra, and A* on one grid, including the same obstacles, terrain costs, and movement rules. **Array Techniques** uses one sorted array for Binary Search and Two Pointers, with separate target value and target sum controls. **Optimization** shows Gradient Descent and Interval Scheduling with their own inputs and clearly labeled results; their metrics are not ranked against each other. The shared timeline aligns replay positions, not equivalent operations. A run that finishes early holds its final frame, and each run retains its own outcome and cancellation status.
-
-Dijkstra's default uniform grid can produce the same minimum-hop route as BFS. Choose its **Weighted detour** preset, then **Compare searches**, to see a deterministic case where BFS takes 9 hops at terrain cost 27 while Dijkstra takes 11 hops at cost 20. The comparison panel separates hop counts from weighted costs. Browser execution time is not treated as a rigorous benchmark.
-
-Shortcuts: Space plays or pauses; Left and Right step; R restarts; C resets the camera. Shortcuts do not activate while editing fields.
-
-The shared camera retains the original OrbitControls drag sensitivity, damping, pan, and immediate wheel zoom. A local extension allows continuous rotation through both poles. Drag directions follow the current view, including when it is upside down or rolled; the rotation axes update with each new orientation. Algorithm coordinates and move notation stay fixed. The controls are adapted from three-stdlib 2.36.1, with its [MIT license](public/licenses/three-stdlib-MIT.txt) distributed in the site.
-
-## Architecture
-
-### Rubik’s Cube
-
-The full **3×3 cube** includes all 26 exterior cubies and 54 stickers. A legal seeded scramble uses **0–100 face turns**, defaulting to 20. A dedicated worker prepares pruning tables and searches with [Kociemba’s two-phase algorithm](https://kociemba.org/math/twophase.htm); you can inspect the initial cube or cancel while it works. Every returned solution is independently checked before replay. Phase 1 fixes orientations and equatorial slice membership; phase 2 uses U/D turns and side-face half turns to solve permutations.
-
-Replay shows solution moves and phase transitions, not every internal search branch. A half turn counts as one move; the result is **not guaranteed shortest**. A longer scramble need not produce a longer solution. Face letters are fixed to the cube: U Up, R Right, F Front, D Down, L Left, B Back. A bare letter is clockwise when looking at that face; `′` means inverse and `2` means a half turn. Camera orbit does not change those meanings. Use the scene or **Inspect cubie** to select any piece, including hidden ones. Reduced motion snaps directly to each state.
-
-The solver is selectively vendored from [cube.js](https://github.com/ldez/cubejs/tree/6b3da493894d9aed54f4c8aafccadbe676e745b5), with its [MIT license](public/licenses/cubejs-MIT.txt) distributed in the site. Its npm package is not required.
-
-### Application structure
-
-The application keeps computation, state, rendering, UI controls, and learning content separate:
-
-| Area             | Location                                                      | Responsibility                                                                           |
-| ---------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Engine           | src/engine                                                    | Typed module/frame contracts, seed generation, validation, URL codec, timeline, registry |
-| Grid search      | src/algorithms/grid                                           | Shared environment and neighbor rules, BFS/Dijkstra/A*/DFS runs, 3D grid scene           |
-| RRT              | src/algorithms/rrt                                            | 3D sampling, collision checks, tree frames, RRT scene                                    |
-| Gradient descent | src/algorithms/gradient                                       | Objective/gradient pairs, descent frames, surface scene                                  |
-| Topic algorithms | src/algorithms/sorting, tree, dp, backtracking, greedy, array | Pure runners, illustrated scenes, and learning content across the expanded topics        |
-| Seeded inputs    | src/algorithms/common                                         | Bounded deterministic arrays, distinct keys, and intervals                               |
-| Shared UI        | src/components and src/App.tsx                                | Schema-driven controls, viewport, playback, learning panels                              |
-
-Every displayed frame contains algorithm state, active pseudocode lines, an event, a current-step explanation, and metrics. Grid search, N-Queens, and the seven expanded-catalog algorithms generate frames incrementally in a browser worker and recreate uncached steps deterministically when you seek backward. Other algorithms return immutable, indexed frames. A module can provide a `steps` generator and register its pure producer in src/workers/traceWorker.ts to opt into lazy replay and cancellation. A worker-only module can instead provide `createTrace`: Rubik’s Cube uses a dedicated worker that is terminated on cancellation and publishes a compact verified solution path. The renderer consumes one frame's state and never runs the algorithm itself. This supports reverse stepping, scrubbing, and deterministic replay without keeping every large search snapshot in memory.
-
-The parameter schema is a discriminated union of number, boolean, select, and seed definitions. It drives both the panel and input/URL validation. Numeric definitions declare finite minimum and maximum values, a step, and an optional slider control. Algorithms can add their own parameter keys without changing the shared panel.
-
-The registry in src/engine/registry.ts holds module descriptors. Module metadata creates expandable topic navigation automatically; modules provide their renderer, camera framing, presets, pseudocode, educational content, and an inspection function. New showcase scenes are lazy loaded.
-
-## Add an algorithm
-
-1. Create a folder under src/algorithms with pure simulation logic, a renderer, and a module descriptor. Use the contracts in src/engine/types.ts.
-2. Give the module metadata, parameter definitions and defaults, presets, pseudocode, educational content, a deterministic `run` function or worker-only `createTrace` factory, a renderer, and an inspection function.
-3. Register the module in src/engine/registry.ts. The shared shell will provide playback, parameter controls, timeline, URL values, camera controls, learning panels, and navigation.
-4. Add unit tests for correctness, validation, deterministic replay, and edge cases; then run the checks above.
-
-A compact module shape:
-
-```ts
-const module: AlgorithmModule<MyState> = {
-    meta: {
-        id: 'example',
-        name: 'Example',
-        shortName: 'Example',
-        category: 'Geometry',
-        dimensionality: '3D',
-        description: '...',
-        tags: ['geometry'],
-    },
-    parameters: [
-        {
-            type: 'number',
-            key: 'count',
-            label: 'Count',
-            defaultValue: 20,
-            min: 1,
-            max: 100,
-            integer: true,
-        },
-    ],
-    defaults: { count: 20 },
-    presets: [{ name: 'Small', values: { count: 10 } }],
-    pseudocode: [{ id: 1, text: 'initialize' }],
-    education: {/* overview, intuition, complexity, applications, legend, references */},
-    run: (params) => makeFrames(params),
-    renderer: lazy(() => import('./ExampleScene')),
-    inspect: (state, id) => inspectObject(state, id),
-}
-```
-
-For randomized modules, derive separate seeded streams for environment generation and algorithm samples through src/engine/seededRandom.ts and src/algorithms/common/seededInputs.ts. Keep expensive inputs validated and bounded; use an incremental worker trace when a search can produce too many snapshots for eager replay.
-
-## GitHub Pages deployment
-
-The workflow at .github/workflows/pages.yml checks types, runs unit and browser tests, builds, and publishes dist on pushes to main. In the repository's **Settings → Pages**, set **Source** to **GitHub Actions**. After a successful deployment, the site is available at [brucerry.github.io/algo-motion](https://brucerry.github.io/algo-motion/).
-
-Vite derives the repository subpath from the GitHub repository name, so a project repository is served from its usual Pages subpath. A repository named like username.github.io uses the root path. For a different static host or custom path, set BASE_PATH during the build:
-
-```bash
-BASE_PATH=/my-path/ npm run build
-BASE_PATH=/my-path/ npm run preview
-```
-
-Hash routes keep algorithm links working without server rewrite rules. The source repository is [brucerry/algo-motion](https://github.com/brucerry/algo-motion).
-
-## Current limits
-
-Grid algorithms use a 2D logical grid presented in a 3D scene; RRT and gradient descent operate in true 3D scenes. Grid and N-Queens searches have no recorded-step ceiling; other runs use their configured algorithm bounds and validated input sizes. A* optimality depends on the heuristic and movement costs; the UI labels settings that lose an optimality guarantee. DFS demonstrates traversal and does not promise the shortest path. The catalog offers one or two showcases per topic for now, not every algorithm in each family.
-
-The showcases and original algorithms allow these maximum input sizes:
-
-| Showcase                         | Maximum                                        |
-| -------------------------------- | ---------------------------------------------- |
-| DFS                              | 240 × 240 grid                                 |
-| Bubble Sort                      | 140 items                                      |
-| BST Search                       | 120 nodes                                      |
-| 0/1 Knapsack                     | 80 items and capacity 180                      |
-| N-Queens                         | 80 × 80 board                                  |
-| Interval Scheduling              | 120 activities                                 |
-| Binary Search and Sorted Two-Sum | 160 items each                                 |
-| BFS, Dijkstra, and A*            | 240 × 240 grid                                 |
-| RRT                              | Workspace 200, 180 obstacles, 6,000 iterations |
-| Gradient Descent                 | 3,000 iterations                               |
-
-Every configured item remains in the scene, including all grid cells, table cells, board squares, tree nodes, array items, and RRT obstacles and nodes. Large scenes start with a scaled overview; zoom and pan to inspect details. Labels thin out when they would overlap. A long grid or N-Queens search can take time, but it continues until a result unless you cancel it or the browser reports an error.
+| Guide                                       | Contents                                                         |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| [User guide](docs/user-guide.md)            | Playback, camera, shortcuts, parameters, sharing, and comparison |
+| [Algorithms and limits](docs/algorithms.md) | Catalog, input ranges, and algorithm-specific behavior           |
+| [Design notes](docs/design-notes.md)        | Visual choices, camera motion, cube solving, and attribution     |
+| [Architecture](docs/architecture.md)        | Modules, frames, workers, validation, and reproducible replay    |
+| [Development](docs/development.md)          | Setup, tests, extension guide, and deployment                    |
+| [Screenshots](docs/screenshots.md)          | Desktop scenes and mobile captures                               |
