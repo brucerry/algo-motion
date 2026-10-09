@@ -21,6 +21,7 @@ const showcaseIds = [
     'coin-change',
     'sudoku',
     'rrt-star',
+    'rubiks-cube',
 ]
 const maximumSizes: Record<string, Record<string, number>> = {
     dfs: { width: 240, depth: 240 },
@@ -38,6 +39,7 @@ const maximumSizes: Record<string, Record<string, number>> = {
     'coin-change': { amount: 300 },
     sudoku: { clueCount: 65 },
     'rrt-star': { maxIterations: 6000 },
+    'rubiks-cube': { scrambleLength: 100 },
 }
 
 describe('showcase catalog contracts', () => {
@@ -97,6 +99,10 @@ describe('showcase catalog contracts', () => {
                 expect(module.education[field].trim().length).toBeGreaterThan(0)
             expect(module.education.legend.length).toBeGreaterThan(0)
             expect(module.education.references.length).toBeGreaterThan(0)
+            if (!module.run) {
+                expect(module.createTrace).toBeTypeOf('function')
+                continue // Worker-only frame correctness is covered by its solver/trace tests.
+            }
             const result = module.run(module.defaults)
             expect(result.frames.length).toBeGreaterThan(1)
             for (const frame of result.frames) {

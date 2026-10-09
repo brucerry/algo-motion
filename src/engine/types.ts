@@ -1,5 +1,6 @@
 import type { ComponentType, LazyExoticComponent } from 'react'
 import type { ProducedStep } from './steps'
+import type { TraceSource } from './trace'
 
 export type ParamValue = string | number | boolean
 export type Params = Record<string, ParamValue>
@@ -70,6 +71,7 @@ export type SceneProps<S> = {
     selectedId: string | null
     reducedMotion: boolean
     theme: 'light' | 'dark'
+    playback?: { frameIndex: number; playing: boolean; speed: number }
 }
 export type Renderer<S> =
     ComponentType<SceneProps<S>> | LazyExoticComponent<ComponentType<SceneProps<S>>>
@@ -80,9 +82,11 @@ export type AlgorithmModule<S, P extends Params = Params> = {
     presets: { name: string; values: Partial<P> }[]
     pseudocode: PseudocodeLine[]
     education: Education
-    run: (params: P) => SimulationRun<S>
     steps?: (params: P) => Generator<ProducedStep<S>, SimulationRun<S>['outcome']>
     renderer: Renderer<S>
     cameraForState?: (state: S) => AlgorithmMeta['camera']
     inspect: (state: S, id: string) => Metric[] | null
-}
+} & (
+    | { run: (params: P) => SimulationRun<S>; createTrace?: (params: P) => TraceSource<S> }
+    | { run?: never; createTrace: (params: P) => TraceSource<S> }
+)

@@ -7,6 +7,7 @@ export type TraceSnapshot = {
     status: TraceStatus
     outcome: SimulationRun<unknown>['outcome'] | null
     error?: string
+    message?: string
 }
 
 export interface TraceSource<S> {

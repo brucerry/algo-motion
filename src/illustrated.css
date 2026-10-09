@@ -1,4 +1,5 @@
 .app {
+    overflow-x: clip;
     --marker: #f8c775;
     --marker-ink: #273444;
     --warn-bg: #fff0d0;

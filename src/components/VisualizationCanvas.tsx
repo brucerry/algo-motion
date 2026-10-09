@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { RegisteredAlgorithm } from '../engine/registry'
-import type { Frame } from '../engine/types'
+import type { Frame, SceneProps } from '../engine/types'
 import { scenePalette, type Theme } from '../visual/scenePalette'
 
 export type CameraCommand = { preset: 'perspective' | 'top' | 'side'; revision: number }
@@ -66,6 +66,7 @@ export default function VisualizationCanvas({
     cameraCommand,
     reducedMotion,
     theme,
+    playback,
 }: {
     algorithm: RegisteredAlgorithm
     frame: Frame<any>
@@ -74,6 +75,7 @@ export default function VisualizationCanvas({
     cameraCommand: CameraCommand
     reducedMotion: boolean
     theme: Theme
+    playback?: SceneProps<unknown>['playback']
 }) {
     const Renderer = algorithm.renderer
     const palette = scenePalette(theme)
@@ -111,6 +113,7 @@ export default function VisualizationCanvas({
                         selectedId={selectedId}
                         reducedMotion={reducedMotion}
                         theme={theme}
+                        playback={playback}
                     />
                 </Suspense>
             </Canvas>

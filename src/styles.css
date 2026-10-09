@@ -357,6 +357,32 @@ button {
 .terminal-message strong {
     white-space: nowrap;
 }
+
+.cube-details {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+.cube-details p {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.85rem;
+}
+.cube-details strong {
+    margin-right: 8px;
+}
+.cube-details label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.cube-details select {
+    max-width: 100%;
+}
 .compare-switcher {
     display: flex;
     gap: 4px;

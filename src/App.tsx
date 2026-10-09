@@ -13,6 +13,7 @@ import { legendTone, scenePalette } from './visual/scenePalette'
 import type { Frame, Params } from './engine/types'
 import { eagerTrace, type TraceSource } from './engine/trace'
 import { workerTrace } from './engine/workerTrace'
+import { moduleTrace } from './engine/moduleTrace'
 import { ComparisonTraceSet } from './engine/comparisonTrace'
 import {
     comparisonInputLabel,
@@ -27,6 +28,7 @@ import {
 } from './engine/comparison'
 import { runBinary } from './algorithms/array/binary'
 import { runTwoSum } from './algorithms/array/twoSum'
+import CubeDetails from './algorithms/backtracking/rubiks/CubeDetails'
 import {
     createGrid,
     gridDefaults,
@@ -207,10 +209,17 @@ export default function App() {
             history.replaceState(null, '', location.pathname + location.search + hash)
     }, [algorithmId, params, speed, theme])
 
+    const [restartVersion, setRestartVersion] = useState(0)
     const traceKey = JSON.stringify(
         compare
-            ? { algorithmId, compare, shared: compareShared, individual: compareParams }
-            : { algorithmId, params, compare },
+            ? {
+                  algorithmId,
+                  compare,
+                  shared: compareShared,
+                  individual: compareParams,
+                  restartVersion,
+              }
+            : { algorithmId, params, compare, restartVersion },
     )
     useEffect(() => {
         let normal: TraceSource<any> | null = null
@@ -252,13 +261,7 @@ export default function App() {
                             kind: 'queens',
                             params: effective as { size: number },
                         })
-                    else if (member.steps)
-                        comparison[id] = workerTrace({
-                            kind: 'algorithm',
-                            algorithmId: id,
-                            params: effective,
-                        })
-                    else comparison[id] = eagerTrace(member.run(effective))
+                    else comparison[id] = moduleTrace(member, effective)
                 }
             } else if (gridIds.includes(algorithmId)) {
                 normal = workerTrace({
@@ -268,9 +271,7 @@ export default function App() {
                 })
             } else if (algorithmId === 'n-queens') {
                 normal = workerTrace({ kind: 'queens', params: params as { size: number } })
-            } else if (module.steps) {
-                normal = workerTrace({ kind: 'algorithm', algorithmId, params })
-            } else normal = eagerTrace(module.run(params))
+            } else normal = moduleTrace(module, params)
         } catch (error) {
             for (const source of Object.values(comparison ?? {})) source.dispose()
             comparison = null
@@ -311,6 +312,7 @@ export default function App() {
         status: 'generating' as const,
         outcome: null,
         error: undefined,
+        message: undefined,
     }
     const total = comparisonSession?.available() ?? snapshot.available
     useEffect(() => {
@@ -562,6 +564,13 @@ export default function App() {
     }
     const cameraPreset = (preset: CameraCommand['preset']) =>
         setCamera((previous) => ({ preset, revision: previous.revision + 1 }))
+    const restart = useCallback(() => {
+        cueSourceRef.current = null
+        setPlaying(false)
+        setIndex(0)
+        if (activeModule.meta.id === 'rubiks-cube' && run?.snapshot().status === 'generating')
+            setRestartVersion((version) => version + 1)
+    }, [activeModule.meta.id, run])
     useEffect(() => {
         const keydown = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null
@@ -588,14 +597,12 @@ export default function App() {
                 cueSourceRef.current = 'manual'
                 setIndex((old) => clampFrame(old - 1, total))
             } else if (event.key.toLowerCase() === 'r') {
-                cueSourceRef.current = null
-                setPlaying(false)
-                setIndex(0)
+                restart()
             } else if (event.key.toLowerCase() === 'c') cameraPreset('perspective')
         }
         window.addEventListener('keydown', keydown)
         return () => window.removeEventListener('keydown', keydown)
-    }, [total])
+    }, [total, restart])
     const inspection =
         frame && selected !== null ? activeModule.inspect(frame.state, selected) : null
     return (
@@ -811,6 +818,7 @@ export default function App() {
                                         cameraCommand={camera}
                                         reducedMotion={reducedMotion}
                                         theme={theme}
+                                        playback={{ frameIndex: scene.frame.index, playing, speed }}
                                     />
                                 </div>
                             </Suspense>
@@ -855,15 +863,23 @@ export default function App() {
                             <span>
                                 {snapshot.status === 'cancelled'
                                     ? 'Generation was cancelled before the search finished.'
-                                    : frame?.explanation ||
-                                      snapshot.error ||
+                                    : snapshot.error ||
+                                      frame?.explanation ||
                                       'This run could not finish.'}
                             </span>
                         </div>
                     )}
+                    {activeModule.meta.id === 'rubiks-cube' && frame && (
+                        <CubeDetails
+                            state={frame.state}
+                            selectedId={selected}
+                            onSelect={setSelected}
+                        />
+                    )}
                     {run && snapshot.status === 'generating' && (
                         <div className="notice" role="status">
-                            Generating trace… {snapshot.available} steps available.
+                            {snapshot.message ||
+                                `Generating trace… ${snapshot.available} steps available.`}
                             <button
                                 type="button"
                                 onClick={() => {
@@ -944,11 +960,7 @@ export default function App() {
                                 aria-label="Restart"
                                 title="Restart (R)"
                                 disabled={!frame}
-                                onClick={() => {
-                                    cueSourceRef.current = null
-                                    setPlaying(false)
-                                    setIndex(0)
-                                }}
+                                onClick={restart}
                             >
                                 <SketchIcon name="restart" size={17} />
                             </button>
@@ -1081,6 +1093,11 @@ export default function App() {
                                             <strong>{member.meta.shortName}</strong>
                                             <span>{comparisonInputLabel(id, effective)}</span>
                                             <span>Status {status}</span>
+                                            {resultState.status === 'generating' &&
+                                                resultState.message && (
+                                                    <span>{resultState.message}</span>
+                                                )}
+                                            {resultState.error && <span>{resultState.error}</span>}
                                             <span>
                                                 Steps {current?.index ?? resultIndex} /{' '}
                                                 {resultState.total === null

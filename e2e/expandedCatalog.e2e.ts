@@ -60,7 +60,7 @@ test('expanded topic comparison covers all members with labeled inputs', async (
         ['inorder-traversal', 2, 'Same BST'],
         ['rrt-star', 2, 'Same 10³ workspace'],
         ['coin-change', 2, 'Minimum coins for amount'],
-        ['sudoku', 2, '9×9 Sudoku'],
+        ['sudoku', 3, '9×9 Sudoku'],
     ] as const
     for (const [id, count, label] of topics) {
         await page.goto(`/#/algorithm/${id}`)

@@ -4,6 +4,8 @@ import {
     comparisonInputLabel,
     comparisonMembers,
     comparisonSharedDefinitions,
+    comparisonSummary,
+    comparisonExplanation,
     effectiveComparisonParams,
     initialComparisonSettings,
     sharedSortedArray,
@@ -13,6 +15,30 @@ import { runTwoSum } from '../algorithms/array/twoSum'
 import { createWorkspace, rrtDefaults } from '../algorithms/rrt/rrt'
 
 describe('topic comparison settings', () => {
+    it('includes the cube with separate validated input and honest move metrics', () => {
+        const settings = initialComparisonSettings('Backtracking', 'rubiks-cube', {
+            scrambleLength: 100,
+            seed: 23,
+        })
+        expect(comparisonMembers('Backtracking').map((member) => member.meta.id)).toEqual([
+            'n-queens',
+            'rubiks-cube',
+            'sudoku',
+        ])
+        expect(settings.shared).toEqual({})
+        expect(settings.individual['rubiks-cube']).toEqual({ scrambleLength: 100, seed: 23 })
+        expect(settings.individual['sudoku']).not.toHaveProperty('scrambleLength')
+        expect(comparisonInputLabel('rubiks-cube', settings.individual['rubiks-cube'])).toContain(
+            '100 scramble moves; seed 23',
+        )
+        expect(
+            comparisonSummary('rubiks-cube', { state: { applied: 5, phase: 'Phase 2' } } as any),
+        ).toEqual([
+            { label: 'Solution moves applied', value: 5 },
+            { label: 'Phase', value: 'Phase 2' },
+        ])
+        expect(comparisonExplanation('Backtracking', {})).toContain('not directly comparable')
+    })
     it('adjusts oversized logarithmic searches into the common comparison range', () => {
         const settings = initialComparisonSettings('Array Techniques', 'binary-search', {
             count: 16384,
@@ -28,7 +54,7 @@ describe('topic comparison settings', () => {
                 settings.individual[member.meta.id],
             )
             expect(params.count).toBe(160)
-            expect(member.run(params).outcome).not.toBe('error')
+            expect(member.run!(params).outcome).not.toBe('error')
         }
     })
     it('shares exact sorting values, tree geometry, and planning obstacles', () => {
@@ -39,9 +65,9 @@ describe('topic comparison settings', () => {
                 sorting.shared,
                 sorting.individual[member.meta.id],
             )
-            return member
-                .run(params)
-                .frames[0].state.items.map((item: { value: number }) => item.value)
+            return member.run!(params).frames[0].state.items.map(
+                (item: { value: number }) => item.value,
+            )
         })
         for (const values of inputs) expect(values).toEqual(inputs[0])
         const trees = initialComparisonSettings('Trees', 'bst-search', {
@@ -51,7 +77,7 @@ describe('topic comparison settings', () => {
         })
         const nodes = comparisonMembers('Trees').map(
             (member) =>
-                member.run(
+                member.run!(
                     effectiveComparisonParams(
                         member,
                         trees.shared,

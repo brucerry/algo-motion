@@ -146,6 +146,8 @@ export function comparisonInputLabel(id: string, params: Params): string {
                 ? `Minimum coins for amount ${params.amount}; denominations ${params.coin1}, ${params.coin2}, ${params.coin3}`
                 : `0/1 Knapsack with ${params.count} items and capacity ${params.capacity}`
         case 'Backtracking':
+            if (id === 'rubiks-cube')
+                return `3×3 Rubik’s Cube; ${params.scrambleLength} scramble moves; seed ${params.seed}`
             return id === 'sudoku'
                 ? `9×9 Sudoku; ${params.puzzle === 'unsatisfiable' ? 'unsatisfiable puzzle' : `${params.clueCount} seeded clues`}`
                 : `${params.size}×${params.size} N-Queens board`
@@ -167,6 +169,11 @@ function routeCost(path: number[], environment: GridEnvironment): number {
 export function comparisonSummary(id: string, frame: Frame<any> | null): Metric[] {
     if (!frame) return []
     const state = frame.state
+    if (id === 'rubiks-cube')
+        return [
+            { label: 'Solution moves applied', value: state.applied },
+            { label: 'Phase', value: state.phase },
+        ]
     if (['bubble-sort', 'insertion-sort', 'quick-sort', 'merge-sort'].includes(id))
         return [
             { label: 'Comparisons', value: state.comparisons },
@@ -273,7 +280,7 @@ export function comparisonExplanation(category: string, shared: Params): string 
         case 'Dynamic Programming':
             return 'Knapsack maximizes value with each item used once; Coin Change minimizes reusable coins for an exact amount. Their results are not directly comparable.'
         case 'Backtracking':
-            return 'N-Queens and Sudoku solve separate constraint problems. Candidates and reversals describe each search; their counts are not directly comparable.'
+            return 'N-Queens, Sudoku, and Rubik’s Cube solve separate problems. Candidates, reversals, and cube solution moves have different meanings; their counts are not directly comparable. Shared steps are replay positions.'
         default:
             return 'These algorithms solve different optimization problems. Their objective values and schedule sizes are not directly comparable.'
     }
