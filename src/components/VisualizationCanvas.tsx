@@ -1,10 +1,9 @@
-import { Suspense, useEffect, useRef } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import { Suspense, useEffect, useMemo } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import type { RegisteredAlgorithm } from '../engine/registry'
 import type { Frame, SceneProps } from '../engine/types'
 import { scenePalette, type Theme } from '../visual/scenePalette'
+import { OrbitControls } from '../visual/vendor/OrbitControls.js'
 
 export type CameraCommand = { preset: 'perspective' | 'top' | 'side'; revision: number }
 
@@ -12,14 +11,40 @@ function CameraRig({
     command,
     algorithm,
     state,
+    reducedMotion,
 }: {
     command: CameraCommand
     algorithm: RegisteredAlgorithm
     state: unknown
+    reducedMotion: boolean
 }) {
-    const controls = useRef<OrbitControlsImpl>(null)
-    const { camera } = useThree()
+    const { camera, gl, invalidate, get, set } = useThree()
     const framing = algorithm.cameraForState?.(state) ?? algorithm.meta.camera
+    // A fresh controller clears residual drag/zoom/pan momentum on a camera reset.
+    const controlsKey = JSON.stringify([command, algorithm.meta.id, framing, reducedMotion])
+    const controls = useMemo(() => {
+        const controller = new OrbitControls(camera)
+        controller.enableFullRotation = true
+        controller.screenRelativeRotation = true
+        controller.minPolarAngle = -Infinity
+        controller.maxPolarAngle = Infinity
+        controller.enableDamping = !reducedMotion
+        controller.minDistance = 0.15
+        controller.maxDistance = 100
+        return controller
+    }, [camera, controlsKey])
+    useEffect(() => {
+        controls.connect(gl.domElement)
+        const onChange = () => invalidate()
+        controls.addEventListener('change', onChange)
+        const previous = get().controls
+        set({ controls })
+        return () => {
+            controls.removeEventListener('change', onChange)
+            controls.dispose()
+            set({ controls: previous })
+        }
+    }, [controls, gl, invalidate, get, set])
     useEffect(() => {
         const distance = framing?.distance ?? 21
         const targetY = framing?.targetY ?? 0
@@ -34,28 +59,24 @@ function CameraRig({
                         distance * 0.7,
                     ])
         camera.position.set(...position)
+        camera.up.set(0, 1, 0)
         camera.lookAt(0, targetY, 0)
-        controls.current?.target.set(0, targetY, 0)
-        controls.current?.update()
+        controls.target.set(0, targetY, 0)
+        controls.update()
     }, [
         command,
         algorithm,
         camera,
+        controls,
+        reducedMotion,
         framing?.distance,
         framing?.targetY,
         framing?.perspective?.[0],
         framing?.perspective?.[1],
         framing?.perspective?.[2],
     ])
-    return (
-        <OrbitControls
-            ref={controls}
-            makeDefault
-            enableDamping
-            minDistance={0.15}
-            maxDistance={100}
-        />
-    )
+    useFrame(() => controls.update(), -1)
+    return null
 }
 
 export default function VisualizationCanvas({
@@ -104,7 +125,12 @@ export default function VisualizationCanvas({
                     intensity={theme === 'dark' ? 21 : 13}
                     color={palette.frontier}
                 />
-                <CameraRig command={cameraCommand} algorithm={algorithm} state={frame.state} />
+                <CameraRig
+                    command={cameraCommand}
+                    algorithm={algorithm}
+                    state={frame.state}
+                    reducedMotion={reducedMotion}
+                />
                 <Suspense fallback={null}>
                     <Renderer
                         key={algorithm.meta.id}
