@@ -6,7 +6,7 @@
 
 Expand a topic and choose an algorithm. Topics and entries appear in alphabetical order. On smaller screens, use the compact navigation and panels to reach the same controls.
 
-The scene, Current step, pseudocode, and metrics describe the displayed frame. Click a scene item to inspect its state. Rubik’s Cube also provides an **Inspect cubie** selector for pieces hidden behind the visible faces.
+The scene, Current step, pseudocode, and metrics describe the displayed frame. Click a scene item to inspect its state. Rubik’s Cube, Mirror Cube and Square-1 also provide piece selectors for every exterior piece, including those hidden behind visible faces.
 
 ## Playback and camera
 
@@ -46,26 +46,26 @@ While a worker generates steps, the timeline shows a pending total and allows in
 
 Grid search and N-Queens continue until they find a result or exhaust their search, without a fixed recorded-step ceiling. RRT and Gradient Descent retain adjustable iteration budgets. A message beside the scene explains no route, no match, no solution, a configured limit, cancellation, or an execution error, including when the Guide tab is open.
 
-Rubik’s Cube keeps its initial scramble inspectable while solver tables and a verified solution are prepared. See [the cube solver](design-notes.md#rubiks-cube-solving-and-replay) for what its animation represents.
+Twisty puzzles keep their initial scramble inspectable while tables and a verified solution are prepared. Their replay has no imposed step ceiling. Cube presets retain the selected size and all puzzle presets retain the seed. See [puzzle strategies and notation](design-notes.md#rubiks-cube-solving-and-replay) for what the animation represents.
 
 ## Comparison
 
 **Compare topic** is available for topics with at least two algorithms; Graph Search labels it **Compare searches**. Every implemented algorithm in the selected topic is included.
 
-| Topic               | Inputs used in comparison                                                   |
-| ------------------- | --------------------------------------------------------------------------- |
-| Array Techniques    | One sorted array; separate target value and target sum                      |
-| Backtracking        | Separate N-Queens, Sudoku, and 3×3 cube inputs                              |
-| Dynamic Programming | Separate knapsack and coin-change inputs                                    |
-| Graph Search        | One grid, with identical obstacles, terrain costs, seed, and movement rules |
-| Motion Planning     | One workspace and obstacle set for RRT and RRT*                             |
-| Optimization        | Separate Gradient Descent and Interval Scheduling inputs                    |
-| Sorting             | One seeded starting array for all four strategies                           |
-| Trees               | One seeded BST for search and traversal                                     |
+| Topic               | Inputs used in comparison                                                        |
+| ------------------- | -------------------------------------------------------------------------------- |
+| Array Techniques    | One sorted array; separate target value and target sum                           |
+| Backtracking        | Separate Mirror Cube, N-Queens, 3×3–5×5 Rubik’s Cube, Square-1 and Sudoku inputs |
+| Dynamic Programming | Separate knapsack and coin-change inputs                                         |
+| Graph Search        | One grid, with identical obstacles, terrain costs, seed, and movement rules      |
+| Motion Planning     | One workspace and obstacle set for RRT and RRT*                                  |
+| Optimization        | Separate Gradient Descent and Interval Scheduling inputs                         |
+| Sorting             | One seeded starting array for all four strategies                                |
+| Trees               | One seeded BST for search and traversal                                          |
 
 Shared controls use the common valid range. For example, entering Array Techniques comparison from Binary Search above 160 items adjusts the shared size to 160 with a notice.
 
-The shared timeline aligns replay positions, not equivalent algorithm operations. A run that finishes first holds its final state. Each retains its own outcome and cancellation status. Metrics for different problems are labeled separately and are not ranked against each other; browser execution time is not a rigorous algorithm benchmark.
+Changing a case's own parameters regenerates just that case; shared-input changes regenerate every affected member. The shared timeline aligns replay positions, not equivalent algorithm operations. A run that finishes first holds its final state. Each retains its own outcome and cancellation status. Metrics for different problems are labeled separately and are not ranked against each other; browser execution time is not a rigorous algorithm benchmark.
 
 For a useful weighted-path example, open Dijkstra’s **Weighted detour** preset and choose **Compare searches**. See [why BFS and Dijkstra can look alike](algorithms.md#graph-search).
 

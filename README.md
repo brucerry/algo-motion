@@ -13,13 +13,13 @@ Learn algorithms through interactive 3D simulations. Step through a run, inspect
 
 ## Explore
 
-- **21 showcases across eight topics:** Graph Search, Motion Planning, Optimization, Sorting, Trees, Dynamic Programming, Backtracking, and Array Techniques.
+- **23 showcases across eight topics:** Graph Search, Motion Planning, Optimization, Sorting, Trees, Dynamic Programming, Backtracking, and Array Techniques.
 - **Control every step:** play, pause, reverse, scrub, and choose speeds from 0.25× to 32×.
 - **See the reasoning:** synchronized pseudocode, explanations, metrics, selection details, and comparison within a topic.
 - **Make it your own:** editable presets, visible seeds, shareable URLs, notebook/chalkboard themes, and optional step sounds.
 - **Use it anywhere:** desktop and mobile layouts, full 3D camera rotation, keyboard controls, and reduced-motion support.
 
-Includes A*, RRT*, Quick/Merge Sort, Sudoku, and a tactile 3×3 Rubik’s Cube. See the [full catalog and input limits](docs/algorithms.md).
+Includes A*, RRT*, Quick/Merge Sort, Sudoku, tactile 3×3–5×5 Rubik’s Cubes, Mirror Cube, and Square-1. See the [full catalog and input limits](docs/algorithms.md).
 
 The deployed app runs entirely in your browser; no account or backend is required.
 

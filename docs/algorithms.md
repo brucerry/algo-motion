@@ -4,18 +4,18 @@
 
 ## Catalog
 
-The workbench contains **21 algorithm showcases across eight topics**.
+The workbench contains **23 algorithm showcases across eight topics**.
 
-| Topic               | Algorithms                                          | What the scene shows                                               |
-| ------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
-| Array Techniques    | Binary Search; Sorted Two-Sum                       | Search intervals, indices, and pointer moves                       |
-| Backtracking        | N-Queens; Rubik’s Cube; Sudoku Solver               | Choices and reversals, or a verified cube solution path            |
-| Dynamic Programming | 0/1 Knapsack; Coin Change                           | Table dependencies and result reconstruction                       |
-| Graph Search        | A*; BFS; Depth-First Search; Dijkstra               | Seeded grids, visited cells, and routes                            |
-| Motion Planning     | RRT; RRT*                                           | Collision-aware sampling trees in a true 3D workspace              |
-| Optimization        | Gradient Descent; Interval Scheduling               | Descent on three objective surfaces and greedy interval selection  |
-| Sorting             | Bubble Sort; Insertion Sort; Merge Sort; Quick Sort | Comparisons, swaps/shifts, partitions, and merge buffers           |
-| Trees               | BST Search; In-order Traversal                      | Seeded keys, search paths, a traversal stack, and ascending output |
+| Topic               | Algorithms                                                   | What the scene shows                                               |
+| ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Array Techniques    | Binary Search; Sorted Two-Sum                                | Search intervals, indices, and pointer moves                       |
+| Backtracking        | Mirror Cube; N-Queens; Rubik’s Cube; Square-1; Sudoku Solver | Choices and reversals, or verified twisty-puzzle solution paths    |
+| Dynamic Programming | 0/1 Knapsack; Coin Change                                    | Table dependencies and result reconstruction                       |
+| Graph Search        | A*; BFS; Depth-First Search; Dijkstra                        | Seeded grids, visited cells, and routes                            |
+| Motion Planning     | RRT; RRT*                                                    | Collision-aware sampling trees in a true 3D workspace              |
+| Optimization        | Gradient Descent; Interval Scheduling                        | Descent on three objective surfaces and greedy interval selection  |
+| Sorting             | Bubble Sort; Insertion Sort; Merge Sort; Quick Sort          | Comparisons, swaps/shifts, partitions, and merge buffers           |
+| Trees               | BST Search; In-order Traversal                               | Seeded keys, search paths, a traversal stack, and ascending output |
 
 Each showcase includes pseudocode, current-step explanations, metrics, legends, references, presets, and selection details.
 
@@ -41,7 +41,7 @@ N-Queens attempts one queen per row, showing conflicts, accepted placements, and
 
 Coin Change uses three reusable positive denominations and reconstructs the minimum coins for an exact amount, including unreachable and zero-amount cases. Knapsack shows 0/1 choices, table dependencies, and reconstruction under the selected capacity.
 
-Rubik’s Cube currently supports **3×3**, with all 26 exterior cubies and 54 stickers. It replays an independently verified two-phase solution. See [solver details and notation](design-notes.md#rubiks-cube-solving-and-replay).
+Rubik’s Cube supports **3×3, 4×4 and 5×5**, rendering all 26/56/98 exterior pieces and 54/96/150 stickers. Larger cubes restore centers and edge groups, correct applicable parity, then lift a two-phase 3×3 solution. Mirror Cube restores a fixed unequal-cut metallic exterior using a 3×3 correspondence and an independent geometry check. Square-1 searches shape/parity followed by wedge permutations and middle orientation. All solve from the current state and replay independently verified paths. See [solver details and notation](design-notes.md#rubiks-cube-solving-and-replay).
 
 ## Motion planning and optimization
 
@@ -53,20 +53,22 @@ Gradient Descent follows gradients on circular, elongated, or rippled bowl surfa
 
 These are the current standalone input maxima from the module parameter definitions. Dependent controls can have lower bounds for a particular input, and shared comparison controls use the intersection of member ranges.
 
-| Showcase                             | Maximum                                                  |
-| ------------------------------------ | -------------------------------------------------------- |
-| A*, BFS, DFS, Dijkstra               | 240 × 240 grid                                           |
-| Binary Search                        | 16,384 items                                             |
-| Sorted Two-Sum                       | 160 items                                                |
-| Bubble, Insertion, Merge, Quick Sort | 140 items                                                |
-| BST Search and In-order Traversal    | 2,048 nodes                                              |
-| 0/1 Knapsack                         | 80 items; capacity up to 180, also bounded by item count |
-| Coin Change                          | Amount 300; three denominations from 1 to 100            |
-| N-Queens                             | 80 × 80 board                                            |
-| Sudoku Solver                        | Fixed 9×9 board; 24–65 clues                             |
-| Rubik’s Cube                         | Fixed 3×3 cube; 0–100 scramble turns                     |
-| Interval Scheduling                  | 120 activities                                           |
-| RRT and RRT*                         | Workspace side 200; 180 obstacles; 6,000 iterations      |
-| Gradient Descent                     | 3,000 iterations                                         |
+| Showcase                             | Maximum                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------- |
+| A*, BFS, DFS, Dijkstra               | 240 × 240 grid                                                             |
+| Binary Search                        | 16,384 items                                                               |
+| Sorted Two-Sum                       | 160 items                                                                  |
+| Bubble, Insertion, Merge, Quick Sort | 140 items                                                                  |
+| BST Search and In-order Traversal    | 2,048 nodes                                                                |
+| 0/1 Knapsack                         | 80 items; capacity up to 180, also bounded by item count                   |
+| Coin Change                          | Amount 300; three denominations from 1 to 100                              |
+| N-Queens                             | 80 × 80 board                                                              |
+| Sudoku Solver                        | Fixed 9×9 board; 24–65 clues                                               |
+| Rubik’s Cube                         | 3×3, 4×4 or 5×5; 0–100 scramble turns                                      |
+| Mirror Cube                          | Fixed unequal-cut 3×3 mechanism; 0–100 scramble turns                      |
+| Square-1                             | Eight corners, eight edges, two middle halves; 0–100 legal scramble blocks |
+| Interval Scheduling                  | 120 activities                                                             |
+| RRT and RRT*                         | Workspace side 200; 180 obstacles; 6,000 iterations                        |
+| Gradient Descent                     | 3,000 iterations                                                           |
 
 All configured scene items remain present and selectable. Large input support does not imply fast completion for expensive searches. Grid and N-Queens runs have no fixed recorded-step ceiling and remain cancellable; algorithms with a configured iteration budget retain that budget. See [generation and outcomes](user-guide.md#generation-and-outcomes).

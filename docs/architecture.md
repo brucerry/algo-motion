@@ -29,7 +29,7 @@ Every displayed frame contains algorithm state, active pseudocode lines, an even
 
 Grid search, N-Queens, Insertion/Quick/Merge Sort, In-order Traversal, Coin Change, Sudoku, and RRT* generate steps incrementally in a browser worker. The worker keeps bounded frame caches and regenerates uncached states deterministically when seeking. Cache eviction does not impose a timeline ceiling.
 
-Rubik’s Cube uses a dedicated worker for table preparation and search. Cancellation terminates that worker. It publishes a compact solution path that is independently verified before successful replay. See [the solver explanation](design-notes.md#rubiks-cube-solving-and-replay).
+Rubik’s Cube, Mirror Cube and Square-1 use dedicated workers for table preparation and state-only search. The shared [solution lifecycle](../src/engine/solutionTrace.ts) cancels workers, guards generations, and publishes compact paths only after puzzle-specific verification. [Checkpoint replay](../src/engine/checkpointReplay.ts) validates in yielding chunks, stores a checkpoint every 32 frames and up to 64 cached frames, and reconstructs every requested index without a step ceiling. Obsolete asynchronous seeks cannot replace a newer requested state. Scenes derive rigid transforms from exact model state; camera orientation remains independent. See [the solver explanation](design-notes.md#rubiks-cube-solving-and-replay).
 
 ## Parameters and reproducibility
 
