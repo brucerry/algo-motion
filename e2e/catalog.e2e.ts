@@ -302,11 +302,14 @@ for (const id of ['bfs', 'dijkstra', 'astar']) {
                             ;(buttons[0] as HTMLButtonElement | undefined)?.click()
                         })
                     const cancelled = await page.locator('.terminal-message').allTextContents()
+                    if (cancelled.some((text) => text.includes('Cancelled'))) return true
+                    // Last step selects the latest available frame. If generation
+                    // finished after the first click, select its actual final frame.
+                    await page.getByRole('button', { name: 'Last step' }).evaluateAll((buttons) => {
+                        ;(buttons[0] as HTMLButtonElement | undefined)?.click()
+                    })
                     const outcomes = await page.locator('.outcome-badge').allTextContents()
-                    return (
-                        cancelled.some((text) => text.includes('Cancelled')) ||
-                        outcomes.includes('Completed')
-                    )
+                    return outcomes.includes('Completed')
                 },
                 // A completed trace can still be reconstructing its final large-grid frame.
                 { timeout: 30000 },
