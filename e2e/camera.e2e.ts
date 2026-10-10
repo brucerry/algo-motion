@@ -130,6 +130,8 @@ async function fullVerticalTurn(
 
 for (const id of [
     'rubiks-cube?scrambleLength=0',
+    'mirror-cube?scrambleLength=0',
+    'square-one?scrambleLength=0',
     'astar',
     'rrt',
     'gradient-descent',

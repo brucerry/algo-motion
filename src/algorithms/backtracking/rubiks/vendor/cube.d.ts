@@ -7,6 +7,7 @@ export default class SolverCube {
     solveUpright(maxDepth: number): string | null
     solutionPhase1Length: number
     co: number[]
+    cp: number[]
     eo: number[]
     ep: number[]
 }

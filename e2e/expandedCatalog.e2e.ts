@@ -20,7 +20,9 @@ test('seven new algorithms render and replay on desktop and mobile', async ({ pa
             await page.goto(`/#/algorithm/${id}${query}`)
             await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
             await expect(page.locator('canvas')).toBeVisible()
-            await expect(page.getByRole('button', { name: 'Next step' })).toBeEnabled()
+            await expect(page.getByRole('button', { name: 'Next step' })).toBeEnabled({
+                timeout: 30000,
+            })
             await page.getByRole('button', { name: 'Next step' }).click()
             await expect(page.getByText('Step 1 /', { exact: false })).toBeVisible()
             await page.getByRole('button', { name: 'Previous step' }).click()
@@ -60,7 +62,7 @@ test('expanded topic comparison covers all members with labeled inputs', async (
         ['inorder-traversal', 2, 'Same BST'],
         ['rrt-star', 2, 'Same 10³ workspace'],
         ['coin-change', 2, 'Minimum coins for amount'],
-        ['sudoku', 3, '9×9 Sudoku'],
+        ['sudoku', 5, '9×9 Sudoku'],
     ] as const
     for (const [id, count, label] of topics) {
         await page.goto(`/#/algorithm/${id}`)

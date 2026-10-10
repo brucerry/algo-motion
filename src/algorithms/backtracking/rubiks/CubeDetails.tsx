@@ -56,7 +56,8 @@ export default function CubeDetails({
             </label>
             <small>
                 Cube-fixed faces: U Up · R Right · F Front · D Down · L Left · B Back. ′ inverse · 2
-                half turn.
+                half turn. 2R inner layer · Rw outer two layers · 2-3R depth range. A layer or wide
+                turn counts as one move. Inspection positions use an exact doubled integer lattice.
             </small>
         </section>
     )

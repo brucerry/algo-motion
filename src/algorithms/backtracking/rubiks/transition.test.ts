@@ -1,10 +1,24 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import { initialCubeFrame, verifiedReplay } from './replay'
-import { inverse, notation, parseMoves, turn } from './model'
+import { inverse, notation, parseMoves, turn, affectedLayer, solvedCube } from './model'
 import { transitionDuration, turnAxisAngle, turnTransition } from './transition'
 
 describe('cube frame transitions', () => {
+    it('animates and reverses exactly a wide or inner span on a larger lattice', () => {
+        for (const size of [4, 5] as const) {
+            const before = initialCubeFrame({ size, seed: 42, scrambleLength: 0 }).state
+            for (const move of parseMoves('Rw 2U′', size)) {
+                const after = { ...before, cube: turn(before.cube, move), applied: 1, move }
+                expect(turnTransition(before, after, 1, 2, false)).toEqual(move)
+                const back = turnTransition(after, before, 2, 1, false)!
+                expect(turn(after.cube, back)).toEqual(before.cube)
+                expect(
+                    solvedCube(size).filter((p) => affectedLayer(p.position, move, size)),
+                ).toHaveLength(move.width === 2 ? size * size + 4 * (size - 1) : 4 * (size - 1))
+            }
+        }
+    })
     it('uses signed axes for quarter, inverse, and half turns', () => {
         expect(turnAxisAngle(parseMoves('R')[0])).toEqual({ axis: [1, 0, 0], angle: -Math.PI / 2 })
         expect(turnAxisAngle(parseMoves('L′')[0])).toEqual({ axis: [-1, 0, 0], angle: Math.PI / 2 })

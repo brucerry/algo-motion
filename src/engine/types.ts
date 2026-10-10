@@ -80,8 +80,11 @@ export type AlgorithmModule<S, P extends Params = Params> = {
     parameters: ParameterDefinition[]
     defaults: P
     presets: { name: string; values: Partial<P> }[]
+    preservePresetParams?: boolean
     pseudocode: PseudocodeLine[]
     education: Education
+    educationForParams?: (params: P) => Education
+    pseudocodeForParams?: (params: P) => PseudocodeLine[]
     steps?: (params: P) => Generator<ProducedStep<S>, SimulationRun<S>['outcome']>
     renderer: Renderer<S>
     cameraForState?: (state: S) => AlgorithmMeta['camera']

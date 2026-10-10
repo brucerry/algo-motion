@@ -22,6 +22,8 @@ const showcaseIds = [
     'sudoku',
     'rrt-star',
     'rubiks-cube',
+    'mirror-cube',
+    'square-one',
 ]
 const maximumSizes: Record<string, Record<string, number>> = {
     dfs: { width: 240, depth: 240 },
@@ -40,6 +42,8 @@ const maximumSizes: Record<string, Record<string, number>> = {
     sudoku: { clueCount: 65 },
     'rrt-star': { maxIterations: 6000 },
     'rubiks-cube': { scrambleLength: 100 },
+    'mirror-cube': { scrambleLength: 100 },
+    'square-one': { scrambleLength: 100 },
 }
 
 describe('showcase catalog contracts', () => {
@@ -59,6 +63,9 @@ describe('showcase catalog contracts', () => {
     })
 
     it('registers every showcase once with valid presets', () => {
+        expect(algorithms).toHaveLength(23)
+        expect(categories).toHaveLength(8)
+        expect(algorithmsInCategory('Backtracking')).toHaveLength(5)
         expect(new Set(algorithms.map((algorithm) => algorithm.meta.id)).size).toBe(
             algorithms.length,
         )

@@ -5,9 +5,46 @@ import { Group, MeshStandardMaterial, Quaternion, Vector3 } from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import type { SceneProps } from '../../../engine/types'
 import { tactileTexture } from '../../../visual/tactileTexture'
-import { dot, faceColors, faces, normals, type Cubie, type Move } from './model'
+import {
+    affectedLayer,
+    cubeSize,
+    faceColors,
+    faces,
+    normals,
+    type Cubie,
+    type Move,
+    type Vec,
+    type Face,
+} from './model'
 import type { CubeState } from './replay'
 import { transitionDuration, turnAxisAngle, turnTransition } from './transition'
+
+function FaceLabel({ face, size }: { face: Face; size: number }) {
+    const [visible, setVisible] = useState(false)
+    const last = useRef(false)
+    useFrame(({ camera }) => {
+        const normal = normals[face]
+        const facing =
+            normal[0] * camera.position.x +
+                normal[1] * camera.position.y +
+                normal[2] * camera.position.z >
+            size / 2 + 0.4
+        if (facing !== last.current) {
+            last.current = facing
+            setVisible(facing)
+        }
+    })
+    return visible ? (
+        <Html
+            center
+            occlude
+            position={normals[face].map((v) => v * (size / 2 + 0.4)) as Vec}
+            style={{ pointerEvents: 'none' }}
+        >
+            <span className="scene-annotation">{face}</span>
+        </Html>
+    ) : null
+}
 
 export default function CubeScene({
     state,
@@ -18,8 +55,9 @@ export default function CubeScene({
 }: SceneProps<CubeState>) {
     const resources = useMemo(
         () => ({
-            body: new RoundedBoxGeometry(0.96, 0.96, 0.96, 3, 0.075),
-            sticker: new RoundedBoxGeometry(0.78, 0.78, 0.032, 3, 0.015),
+            // Fixed bounds and rounded radii, with fewer bevel subdivisions for software rendering.
+            body: new RoundedBoxGeometry(0.96, 0.96, 0.96, 1, 0.075),
+            sticker: new RoundedBoxGeometry(0.78, 0.78, 0.032, 1, 0.015),
             plastic: new MeshStandardMaterial({
                 color: '#20232a',
                 roughness: 0.65,
@@ -60,12 +98,12 @@ export default function CubeScene({
     const rotating = useRef<Group>(null)
     const animation = useRef<{ move: Move; elapsed: number; duration: number } | null>(null)
     const [display, setDisplay] = useState(state.cube)
-    const [movingFace, setMovingFace] = useState<Move['face'] | null>(null)
+    const [movingMove, setMovingMove] = useState<Move | null>(null)
     const finish = () => {
         animation.current = null
         rotating.current?.quaternion.identity()
         setDisplay(state.cube)
-        setMovingFace(null)
+        setMovingMove(null)
     }
     useLayoutEffect(() => {
         const index = playback?.frameIndex ?? 0
@@ -81,7 +119,7 @@ export default function CubeScene({
         rotating.current?.quaternion.identity()
         if (move) {
             setDisplay(previous.current.state.cube)
-            setMovingFace(move.face)
+            setMovingMove(move)
             animation.current = {
                 move,
                 elapsed: 0,
@@ -108,7 +146,7 @@ export default function CubeScene({
         if (progress === 1) finish()
     })
     const cubieMesh = (cubie: Cubie) => (
-        <group key={cubie.id} position={cubie.position}>
+        <group key={cubie.id} position={cubie.position.map((v) => v / 2) as Vec}>
             <mesh
                 geometry={resources.body}
                 material={selectedId === cubie.id ? resources.selected : resources.plastic}
@@ -141,21 +179,13 @@ export default function CubeScene({
         </group>
     )
     const affected = (cubie: Cubie) =>
-        movingFace !== null && dot(cubie.position, normals[movingFace]) === 1
+        movingMove !== null && affectedLayer(cubie.position, movingMove, cubeSize(display))
     return (
         <group>
             <group>{display.filter((cubie) => !affected(cubie)).map(cubieMesh)}</group>
             <group ref={rotating}>{display.filter(affected).map(cubieMesh)}</group>
             {faces.map((face) => (
-                <Html
-                    key={face}
-                    center
-                    occlude
-                    position={normals[face].map((v) => v * 1.9) as [number, number, number]}
-                    style={{ pointerEvents: 'none' }}
-                >
-                    <span className="scene-annotation">{face}</span>
-                </Html>
+                <FaceLabel key={face} face={face} size={cubeSize(display)} />
             ))}
         </group>
     )

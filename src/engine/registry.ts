@@ -14,6 +14,8 @@ import { coinModule } from '../algorithms/dp/coinModule'
 import { sudokuModule } from '../algorithms/backtracking/sudokuModule'
 import { rrtStarModule } from '../algorithms/rrt/starModule'
 import { rubiksModule } from '../algorithms/backtracking/rubiks/module'
+import { mirrorModule } from '../algorithms/backtracking/mirror/module'
+import { squareModule } from '../algorithms/backtracking/squareOne/module'
 
 export type RegisteredAlgorithm = AlgorithmModule<any>
 export const algorithms: RegisteredAlgorithm[] = [
@@ -38,6 +40,8 @@ export const algorithms: RegisteredAlgorithm[] = [
     sudokuModule,
     rrtStarModule,
     rubiksModule,
+    mirrorModule,
+    squareModule,
 ]
 export const algorithmById = (id: string | null | undefined): RegisteredAlgorithm | undefined =>
     algorithms.find((algorithm) => algorithm.meta.id === id)

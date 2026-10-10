@@ -14,7 +14,10 @@ test('cube solves, replays, shares, and renders on desktop and mobile', async ({
         await page.emulateMedia({ reducedMotion: width === 390 ? 'reduce' : 'no-preference' })
         await page.goto('/#/algorithm/rubiks-cube?scrambleLength=20&seed=42')
         await expect(
-            page.getByRole('heading', { name: 'Rubik’s Cube — Two-Phase Solver', exact: true }),
+            page.getByRole('heading', {
+                name: 'Rubik’s Cube — Two-Phase & Reduction',
+                exact: true,
+            }),
         ).toBeVisible()
         const details = page.getByRole('region', { name: 'Cube notation and selection' })
         await expect(page.locator('canvas')).toBeVisible()
@@ -102,7 +105,7 @@ test('Backtracking comparison includes the cube with separate inputs and status'
     await page.goto('/#/algorithm/rubiks-cube?scrambleLength=5&seed=42')
     await page.getByRole('button', { name: 'Compare topic' }).click()
     const comparison = page.getByRole('region', { name: 'Topic comparison' })
-    await expect(comparison.locator('.comparison-card')).toHaveCount(3)
+    await expect(comparison.locator('.comparison-card')).toHaveCount(5)
     await expect(comparison).toContainText('3×3 Rubik’s Cube; 5 scramble moves; seed 42')
     await expect(comparison).toContainText('9×9 Sudoku')
     await expect(comparison).toContainText('N-Queens board')

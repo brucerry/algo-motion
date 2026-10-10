@@ -1,14 +1,14 @@
 import type { CubeParams } from '../algorithms/backtracking/rubiks/model'
 import { findCubeSolution } from '../algorithms/backtracking/rubiks/solver'
-import { initialCubeFrame, verifiedReplay } from '../algorithms/backtracking/rubiks/replay'
+import { initialCubeFrame, indexedCubeReplay } from '../algorithms/backtracking/rubiks/replay'
 
-self.onmessage = (event: MessageEvent<{ generationId: number; params: CubeParams }>) => {
+self.onmessage = async (event: MessageEvent<{ generationId: number; params: CubeParams }>) => {
     const { generationId, params } = event.data
     const send = (data: object) => self.postMessage({ ...data, generationId })
     try {
         const initial = initialCubeFrame(params)
         const solution = findCubeSolution(initial, (message) => send({ type: 'stage', message }))
-        verifiedReplay(initial, solution)
+        await indexedCubeReplay(initial, solution)
         send({ type: 'solution', solution })
     } catch (error) {
         send({

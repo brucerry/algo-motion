@@ -14,7 +14,8 @@ import type { Frame, Params } from './engine/types'
 import { eagerTrace, type TraceSource } from './engine/trace'
 import { workerTrace } from './engine/workerTrace'
 import { moduleTrace } from './engine/moduleTrace'
-import { ComparisonTraceSet } from './engine/comparisonTrace'
+import { ComparisonRuns, ComparisonTraceSet } from './engine/comparisonTrace'
+import { FrameRequests } from './engine/frameRequests'
 import {
     comparisonInputLabel,
     comparisonExplanation,
@@ -29,6 +30,8 @@ import {
 import { runBinary } from './algorithms/array/binary'
 import { runTwoSum } from './algorithms/array/twoSum'
 import CubeDetails from './algorithms/backtracking/rubiks/CubeDetails'
+import MirrorDetails from './algorithms/backtracking/mirror/MirrorDetails'
+import SquareDetails from './algorithms/backtracking/squareOne/SquareDetails'
 import {
     createGrid,
     gridDefaults,
@@ -135,7 +138,9 @@ export default function App() {
     const [loadedFrames, setLoadedFrames] = useState<
         Map<TraceSource<any>, { index: number; frame: Frame<any> }>
     >(new Map())
-    const requestedFrames = useRef(new Map<TraceSource<any>, number>())
+    const requestedFrames = useRef(new FrameRequests())
+    const comparisonRuns = useRef(new ComparisonRuns())
+    useEffect(() => () => comparisonRuns.current.dispose(), [])
     const module = algorithmById(algorithmId) || algorithms[2]
     const members = comparisonMembers(module.meta.category)
     const sharedDefinitions = comparisonSharedDefinitions(module.meta.category)
@@ -234,46 +239,65 @@ export default function App() {
                         : null
                 const sortedArray =
                     category === 'Array Techniques' ? sharedSortedArray(compareShared) : null
-                for (const member of members) {
-                    const id = member.meta.id
-                    const effective = effectiveComparisonParams(
-                        member,
-                        compareShared,
-                        compareParams[id] ?? {},
-                    )
-                    if (gridEnvironment && gridIds.includes(id))
-                        comparison[id] = workerTrace({
-                            kind: 'grid',
-                            algorithm: id as GridAlgorithm,
-                            params: { ...gridDefaults, ...effective } as GridParams,
-                            environment: gridEnvironment,
-                        })
-                    else if (sortedArray && id === 'binary-search')
-                        comparison[id] = eagerTrace(
-                            runBinary(effective as Parameters<typeof runBinary>[0], sortedArray),
+                comparison = comparisonRuns.current.configure(
+                    members.map((member) => {
+                        const id = member.meta.id
+                        const effective = effectiveComparisonParams(
+                            member,
+                            compareShared,
+                            compareParams[id] ?? {},
                         )
-                    else if (sortedArray && id === 'sorted-two-sum')
-                        comparison[id] = eagerTrace(
-                            runTwoSum(effective as Parameters<typeof runTwoSum>[0], sortedArray),
-                        )
-                    else if (id === 'n-queens')
-                        comparison[id] = workerTrace({
-                            kind: 'queens',
-                            params: effective as { size: number },
-                        })
-                    else comparison[id] = moduleTrace(member, effective)
-                }
+                        return {
+                            id,
+                            key: JSON.stringify([restartVersion, effective]),
+                            create: () => {
+                                if (gridEnvironment && gridIds.includes(id))
+                                    return workerTrace({
+                                        kind: 'grid',
+                                        algorithm: id as GridAlgorithm,
+                                        params: { ...gridDefaults, ...effective } as GridParams,
+                                        environment: gridEnvironment,
+                                    })
+                                else if (sortedArray && id === 'binary-search')
+                                    return eagerTrace(
+                                        runBinary(
+                                            effective as Parameters<typeof runBinary>[0],
+                                            sortedArray,
+                                        ),
+                                    )
+                                else if (sortedArray && id === 'sorted-two-sum')
+                                    return eagerTrace(
+                                        runTwoSum(
+                                            effective as Parameters<typeof runTwoSum>[0],
+                                            sortedArray,
+                                        ),
+                                    )
+                                else if (id === 'n-queens')
+                                    return workerTrace({
+                                        kind: 'queens',
+                                        params: effective as { size: number },
+                                    })
+                                else return moduleTrace(member, effective)
+                            },
+                        }
+                    }),
+                )
             } else if (gridIds.includes(algorithmId)) {
+                comparisonRuns.current.dispose()
                 normal = workerTrace({
                     kind: 'grid',
                     algorithm: algorithmId as GridAlgorithm,
                     params: { ...gridDefaults, ...params } as GridParams,
                 })
             } else if (algorithmId === 'n-queens') {
+                comparisonRuns.current.dispose()
                 normal = workerTrace({ kind: 'queens', params: params as { size: number } })
-            } else normal = moduleTrace(module, params)
+            } else {
+                comparisonRuns.current.dispose()
+                normal = moduleTrace(module, params)
+            }
         } catch (error) {
-            for (const source of Object.values(comparison ?? {})) source.dispose()
+            comparisonRuns.current.dispose()
             comparison = null
             normal = eagerTrace({
                 frames: [],
@@ -291,7 +315,7 @@ export default function App() {
         return () => {
             unsubscribe?.()
             normal?.dispose()
-            session?.dispose()
+            session?.detach()
         }
     }, [traceKey])
     const currentSet = traceSet?.key === traceKey ? traceSet : null
@@ -305,6 +329,8 @@ export default function App() {
               compareParams[activeModule.meta.id] ?? {},
           )
         : params
+    const education = activeModule.educationForParams?.(activeParams) ?? activeModule.education
+    const pseudocode = activeModule.pseudocodeForParams?.(activeParams) ?? activeModule.pseudocode
     const run = comparison ? (comparison[compareId] ?? null) : (currentSet?.normal ?? null)
     const snapshot = run?.snapshot() ?? {
         available: 0,
@@ -326,19 +352,23 @@ export default function App() {
             const available = source.snapshot().available
             if (!available) continue
             const target = Math.min(index, available - 1)
-            if (loadedFrames.get(source)?.index === target) continue
-            if (requestedFrames.current.has(source)) continue
-            requestedFrames.current.set(source, target)
-            void (
-                currentSet.session ? currentSet.session.frame(id, target) : source.frame(target)
-            ).then((frame) => {
-                if (requestedFrames.current.get(source) !== target) return
-                requestedFrames.current.delete(source)
-                if (!frame) return
-                setLoadedFrames((previous) =>
-                    new Map(previous).set(source, { index: target, frame }),
-                )
-            })
+            if (loadedFrames.get(source)?.index === target) {
+                requestedFrames.current.cancel(source)
+                continue
+            }
+            requestedFrames.current.request(
+                source,
+                target,
+                () =>
+                    currentSet.session
+                        ? currentSet.session.frame(id, target)
+                        : source.frame(target),
+                (frame) => {
+                    setLoadedFrames((previous) =>
+                        new Map(previous).set(source, { index: target, frame }),
+                    )
+                },
+            )
         }
     }, [currentSet, index, traceVersion, loadedFrames])
     const targetIndex = Math.min(index, Math.max(0, snapshot.available - 1))
@@ -421,7 +451,7 @@ export default function App() {
         setSelected(null)
     }, [compareId])
     useEffect(() => {
-        const formula = activeModule.education.formula
+        const formula = education.formula
         if (learningTab !== 'guide' || !formula) {
             setFormulaHtml('')
             return
@@ -434,7 +464,7 @@ export default function App() {
         return () => {
             cancelled = true
         }
-    }, [activeModule, learningTab])
+    }, [education.formula, learningTab])
     useEffect(() => {
         if (
             index >= total - 1 &&
@@ -876,6 +906,20 @@ export default function App() {
                             onSelect={setSelected}
                         />
                     )}
+                    {activeModule.meta.id === 'mirror-cube' && frame && (
+                        <MirrorDetails
+                            state={frame.state}
+                            selectedId={selected}
+                            onSelect={setSelected}
+                        />
+                    )}
+                    {activeModule.meta.id === 'square-one' && frame && (
+                        <SquareDetails
+                            state={frame.state}
+                            selectedId={selected}
+                            onSelect={setSelected}
+                        />
+                    )}
                     {run && snapshot.status === 'generating' && (
                         <div className="notice" role="status">
                             {snapshot.message ||
@@ -1151,7 +1195,7 @@ export default function App() {
                                 </div>
                             </div>
                             <ol className="pseudocode-list">
-                                {activeModule.pseudocode.map((line) => (
+                                {pseudocode.map((line) => (
                                     <li
                                         key={line.id}
                                         className={
@@ -1240,14 +1284,14 @@ export default function App() {
                             ) : (
                                 <div className="detail-content guide-content">
                                     <h3>Overview</h3>
-                                    <p>{activeModule.education.overview}</p>
+                                    <p>{education.overview}</p>
                                     <h3>Intuition</h3>
-                                    <p>{activeModule.education.intuition}</p>
-                                    {activeModule.education.formula && (
+                                    <p>{education.intuition}</p>
+                                    {education.formula && (
                                         <div
                                             className="formula"
                                             role="math"
-                                            aria-label={activeModule.education.formula}
+                                            aria-label={education.formula}
                                         >
                                             {formulaHtml ? (
                                                 <span
@@ -1256,12 +1300,12 @@ export default function App() {
                                                     }}
                                                 />
                                             ) : (
-                                                activeModule.education.formula
+                                                education.formula
                                             )}
                                         </div>
                                     )}
                                     <h3>Complexity</h3>
-                                    <p>{activeModule.education.complexity}</p>
+                                    <p>{education.complexity}</p>
                                     <h3>Parameters</h3>
                                     <ul>
                                         {activeModule.parameters.map((parameter) => (
@@ -1274,7 +1318,7 @@ export default function App() {
                                     </ul>
                                     <h3>Visualization legend</h3>
                                     <div className="legend-list">
-                                        {activeModule.education.legend.map((item) => (
+                                        {education.legend.map((item) => (
                                             <div key={item.label}>
                                                 <i
                                                     aria-hidden="true"
@@ -1296,10 +1340,10 @@ export default function App() {
                                         ))}
                                     </div>
                                     <h3>Applications</h3>
-                                    <p>{activeModule.education.applications}</p>
+                                    <p>{education.applications}</p>
                                     <h3>References</h3>
                                     <ul>
-                                        {activeModule.education.references.map((reference) => (
+                                        {education.references.map((reference) => (
                                             <li key={reference.label}>
                                                 <a
                                                     href={reference.url}
@@ -1438,7 +1482,10 @@ export default function App() {
                             error={configError}
                             onChange={(key, value) => commit({ ...params, [key]: value }, key)}
                             onPreset={(values) =>
-                                commit({ ...module.defaults, ...values } as Params)
+                                commit({
+                                    ...(module.preservePresetParams ? params : module.defaults),
+                                    ...values,
+                                } as Params)
                             }
                             onReset={() => commit(module.defaults)}
                             onRandomize={randomize}

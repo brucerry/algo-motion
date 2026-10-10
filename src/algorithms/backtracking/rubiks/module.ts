@@ -2,20 +2,32 @@ import { lazy } from 'react'
 import type { AlgorithmModule } from '../../../engine/types'
 import { cubeTrace } from './trace'
 import { inspectCube, type CubeState } from './replay'
-import type { CubeParams } from './model'
+import { cubeSize, normalizeSize, type CubeParams } from './model'
 
 export const rubiksModule: AlgorithmModule<CubeState> = {
     meta: {
         id: 'rubiks-cube',
-        name: 'Rubik’s Cube — Two-Phase Solver',
+        name: 'Rubik’s Cube — Two-Phase & Reduction',
         shortName: 'Rubik’s Cube',
         category: 'Backtracking',
         dimensionality: '3D',
-        description: 'Turn a tactile 3×3 cube along a verified two-phase solution path.',
+        description:
+            'Solve tactile cubes with verified two-phase search or constructive reduction.',
         tags: ['backtracking', 'iterative deepening', 'pruning', 'two-phase search'],
         camera: { distance: 7.6, perspective: [5.2, 4.2, 6.2] },
     },
     parameters: [
+        {
+            type: 'select',
+            key: 'size',
+            label: 'Cube size',
+            defaultValue: '3',
+            options: [
+                { value: '3', label: '3×3 — Two-phase' },
+                { value: '4', label: '4×4 — Reduction' },
+                { value: '5', label: '5×5 — Reduction' },
+            ],
+        },
         {
             type: 'number',
             key: 'scrambleLength',
@@ -26,17 +38,18 @@ export const rubiksModule: AlgorithmModule<CubeState> = {
             integer: true,
             control: 'slider',
             description:
-                'Legal face turns used to create the input. A longer scramble does not necessarily need a longer solution.',
+                'Legal layer turns used to create the input. Larger cubes include inner and wide turns. A longer scramble does not necessarily need a longer solution.',
         },
         { type: 'seed', key: 'seed', label: 'Random seed', defaultValue: 42 },
     ],
-    defaults: { scrambleLength: 20, seed: 42 },
+    defaults: { size: '3', scrambleLength: 20, seed: 42 },
     presets: [
         { name: 'Already solved', values: { scrambleLength: 0 } },
         { name: 'Short scramble', values: { scrambleLength: 5 } },
         { name: 'Standard scramble', values: { scrambleLength: 20 } },
         { name: 'Long scramble', values: { scrambleLength: 60 } },
     ],
+    preservePresetParams: true,
     pseudocode: [
         'generate legal seeded scramble; check for solved input',
         'prepare coordinate move tables and pruning lower bounds',
@@ -87,6 +100,41 @@ export const rubiksModule: AlgorithmModule<CubeState> = {
         ],
     },
     createTrace: (params) => cubeTrace(params as CubeParams),
+    cameraForState: (state) => {
+        const factor = cubeSize(state.cube) / 3
+        return { distance: 7.6 * factor, perspective: [5.2 * factor, 4.2 * factor, 6.2 * factor] }
+    },
+    educationForParams: (params) =>
+        normalizeSize(params.size) === 3
+            ? rubiksModule.education
+            : {
+                  ...rubiksModule.education,
+                  overview: `Solve the full ${params.size}×${params.size} cube using constructive center and edge reduction, applicable parity correction, and a final two-phase 3×3 search. Replay shows verified solution moves; internal search branches are not replayed.`,
+                  intuition: `Setup moves conjugate exact three-piece commutators. Centers are assigned by color, including joint last-center cases; wings are grouped while restoring centers. ${params.size === '4' ? 'The 4×4 checks single flipped-group and permutation parity.' : 'The 5×5 handles axial and diagonal center orbits and aligns wings with their middle edges, including last-wing parity. Its middle-edge projection follows ordinary 3×3 parity rules.'} Every reduced state is checked before two-phase search. This strategy finds a valid solution, not a shortest one.`,
+                  complexity:
+                      'The constructive stages resolve fixed 24-piece orbits with generated setup tables, followed by exponential two-phase search with pruning lower bounds. Compact replay uses sparse exact checkpoints and a bounded frame cache. Preparation time and browser timing are not algorithm benchmarks.',
+                  applications:
+                      'Cube-fixed U/R/F/D/L/B name faces. R2 is a half turn; 2R turns just the second layer; Rw turns the outer two layers together. An explicit range such as 2-3R turns those two depths. ′ reverses the selected layer turn. Each single-layer, wide, or half turn counts as one solution move; stage-only frames count as zero.',
+              },
+    pseudocodeForParams: (params) =>
+        normalizeSize(params.size) === 3
+            ? rubiksModule.pseudocode
+            : [
+                  'generate legal seeded layer scramble; check for solved input',
+                  'prepare exact setup commutators on 24-piece orbits',
+                  normalizeSize(params.size) === 4
+                      ? 'solve canonical center blocks with joint remaining-piece handling'
+                      : 'solve axial and diagonal center orbits with joint remaining-piece handling',
+                  normalizeSize(params.size) === 4
+                      ? 'pair both wings of each edge while restoring completed centers'
+                      : 'align wings with middle edges; restore centers and correct last-wing parity',
+                  normalizeSize(params.size) === 4
+                      ? 'verify reduced orientation/permutation parity; correct 4×4 parity if needed'
+                      : 'verify complete three-piece edge groups and valid reduced 3×3 parity',
+                  'search reduced 3×3 phase 1: orientations and equatorial slice',
+                  'search phase 2; lift each outer solution move to the full cube',
+                  'verify every full-size sticker and stage boundary; report success',
+              ].map((text, i) => ({ id: i + 1, text })),
     renderer: lazy(() => import('./CubeScene')),
     inspect: inspectCube,
 }

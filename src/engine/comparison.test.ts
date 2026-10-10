@@ -21,12 +21,18 @@ describe('topic comparison settings', () => {
             seed: 23,
         })
         expect(comparisonMembers('Backtracking').map((member) => member.meta.id)).toEqual([
+            'mirror-cube',
             'n-queens',
             'rubiks-cube',
+            'square-one',
             'sudoku',
         ])
         expect(settings.shared).toEqual({})
-        expect(settings.individual['rubiks-cube']).toEqual({ scrambleLength: 100, seed: 23 })
+        expect(settings.individual['rubiks-cube']).toEqual({
+            size: '3',
+            scrambleLength: 100,
+            seed: 23,
+        })
         expect(settings.individual['sudoku']).not.toHaveProperty('scrambleLength')
         expect(comparisonInputLabel('rubiks-cube', settings.individual['rubiks-cube'])).toContain(
             '100 scramble moves; seed 23',
@@ -38,6 +44,37 @@ describe('topic comparison settings', () => {
             { label: 'Phase', value: 'Phase 2' },
         ])
         expect(comparisonExplanation('Backtracking', {})).toContain('not directly comparable')
+    })
+    it('retains isolated inputs and distinct units for all five Backtracking members', () => {
+        const settings = initialComparisonSettings(
+            'Backtracking',
+            'rubiks-cube',
+            { size: '5', scrambleLength: 60, seed: 7 },
+            {
+                'mirror-cube': { scrambleLength: 5, seed: 8 },
+                'square-one': { scrambleLength: 100, seed: 9 },
+                'n-queens': { size: 4 },
+                sudoku: { clueCount: 30, seed: 10 },
+            },
+        )
+        expect(settings.individual['rubiks-cube'].size).toBe('5')
+        expect(settings.individual['mirror-cube']).toEqual({ scrambleLength: 5, seed: 8 })
+        expect(settings.individual['square-one']).toEqual({ scrambleLength: 100, seed: 9 })
+        expect(settings.individual['n-queens'].size).toBe(4)
+        expect(settings.individual.sudoku.clueCount).toBe(30)
+        expect(comparisonInputLabel('rubiks-cube', settings.individual['rubiks-cube'])).toContain(
+            '5×5',
+        )
+        expect(comparisonInputLabel('square-one', settings.individual['square-one'])).toContain(
+            '100 scramble blocks; seed 9',
+        )
+        expect(
+            comparisonSummary('square-one', { state: { applied: 12, phase: 'Solved' } } as any)[0],
+        ).toEqual({ label: 'Solution operations applied', value: 12 })
+        expect(
+            comparisonSummary('mirror-cube', { state: { applied: 5, phase: 'Solved' } } as any)[0]
+                .label,
+        ).toBe('Solution face turns applied')
     })
     it('adjusts oversized logarithmic searches into the common comparison range', () => {
         const settings = initialComparisonSettings('Array Techniques', 'binary-search', {

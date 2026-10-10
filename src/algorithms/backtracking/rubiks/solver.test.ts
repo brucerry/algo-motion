@@ -49,4 +49,23 @@ describe('verified two-phase solver', () => {
         ])
             expect(() => verifiedReplay(initial, solution)).toThrow()
     })
+    it('validates complete larger-cube moves and every reduction boundary before publication', () => {
+        for (const size of [4, 5] as const) {
+            const initial = initialCubeFrame({ size, seed: 42, scrambleLength: 20 })
+            const frames = solveCube(initial, () => {})
+            expect(isSolved(frames.at(-1)!.state.cube)).toBe(true)
+            expect(frames.map((f) => f.event)).toEqual(
+                expect.arrayContaining([
+                    'centers-complete',
+                    'edges-complete',
+                    'parity-complete',
+                    'phase-boundary',
+                    'solved',
+                ]),
+            )
+            expect(frames.at(-1)!.state.applied).toBe(
+                frames.filter((f) => f.event === 'face-turn').length,
+            )
+        }
+    }, 30000)
 })
