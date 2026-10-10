@@ -412,9 +412,11 @@ input[type='range'] {
 .field input[type='number'] {
     border: 2px solid var(--ink);
     border-radius: 11px 9px 13px 8px;
+    box-shadow: 2px 2px 0 var(--page-shadow);
+}
+.field input[type='number'] {
     color: var(--text);
     background: var(--surface);
-    box-shadow: 2px 2px 0 var(--page-shadow);
 }
 
 .field input[aria-invalid='true'] {

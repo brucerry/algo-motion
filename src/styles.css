@@ -82,6 +82,12 @@ button {
         ),
         repeating-linear-gradient(0deg, transparent 0 31px, var(--line) 32px 33px);
 }
+.app select,
+.app option,
+.app optgroup {
+    color: var(--text);
+    background-color: var(--surface);
+}
 .topbar {
     min-height: 72px;
     display: flex;
@@ -556,8 +562,6 @@ input[type='range'] {
     padding: 7px;
     border: 1px solid var(--border);
     border-radius: 7px;
-    background: var(--surface-2);
-    color: var(--text);
 }
 .learning-grid {
     display: grid;
@@ -838,12 +842,14 @@ input[type='range'] {
 .field select,
 .field input[type='number'] {
     width: 100%;
-    background: var(--surface-2);
-    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 7px;
     padding: 8px 9px;
     font-size: 12px;
+}
+.field input[type='number'] {
+    background: var(--surface-2);
+    color: var(--text);
 }
 .field input[aria-invalid='true'] {
     border-color: #f39e8c;
