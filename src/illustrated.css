@@ -407,8 +407,7 @@ input[type='range'] {
     accent-color: var(--accent);
 }
 
-.speed-control select,
-.field select,
+.app select,
 .field input[type='number'] {
     border: 2px solid var(--ink);
     border-radius: 11px 9px 13px 8px;

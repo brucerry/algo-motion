@@ -459,6 +459,13 @@ class OrbitControls extends EventDispatcher {
         let performCursorZoom = false
         const pointers = []
         const pointerPositions = {}
+        // Let an external camera owner discard input momentum without changing response tuning.
+        this.clearMotion = () => {
+            sphericalDelta.set(0, 0, 0)
+            panOffset.set(0, 0, 0)
+            scale = 1
+            performCursorZoom = false
+        }
         function getAutoRotationAngle() {
             return ((2 * Math.PI) / 60 / 60) * scope.autoRotateSpeed
         }

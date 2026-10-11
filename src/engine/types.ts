@@ -1,6 +1,7 @@
 import type { ComponentType, LazyExoticComponent } from 'react'
 import type { ProducedStep } from './steps'
 import type { TraceSource } from './trace'
+import type { SelectionFocusBridge } from '../visual/selectionFocus'
 
 export type ParamValue = string | number | boolean
 export type Params = Record<string, ParamValue>
@@ -71,7 +72,8 @@ export type SceneProps<S> = {
     selectedId: string | null
     reducedMotion: boolean
     theme: 'light' | 'dark'
-    playback?: { frameIndex: number; playing: boolean; speed: number }
+    playback?: { frameIndex: number; playing: boolean; speed: number; revision?: number }
+    selectionFocus?: SelectionFocusBridge
 }
 export type Renderer<S> =
     ComponentType<SceneProps<S>> | LazyExoticComponent<ComponentType<SceneProps<S>>>

@@ -18,6 +18,7 @@ import {
 } from './model'
 import type { CubeState } from './replay'
 import { transitionDuration, turnAxisAngle, turnTransition } from './transition'
+import SelectedPiece from '../../../visual/SelectedPiece'
 
 function FaceLabel({ face, size }: { face: Face; size: number }) {
     const [visible, setVisible] = useState(false)
@@ -52,6 +53,7 @@ export default function CubeScene({
     onSelect,
     reducedMotion,
     playback,
+    selectionFocus,
 }: SceneProps<CubeState>) {
     const resources = useMemo(
         () => ({
@@ -60,12 +62,6 @@ export default function CubeScene({
             sticker: new RoundedBoxGeometry(0.78, 0.78, 0.032, 1, 0.015),
             plastic: new MeshStandardMaterial({
                 color: '#20232a',
-                roughness: 0.65,
-                bumpMap: tactileTexture,
-                bumpScale: 0.025,
-            }),
-            selected: new MeshStandardMaterial({
-                color: '#c99b3e',
                 roughness: 0.65,
                 bumpMap: tactileTexture,
                 bumpScale: 0.025,
@@ -89,7 +85,6 @@ export default function CubeScene({
             resources.body.dispose()
             resources.sticker.dispose()
             resources.plastic.dispose()
-            resources.selected.dispose()
             Object.values(resources.colors).forEach((material) => material.dispose())
         },
         [resources],
@@ -144,17 +139,25 @@ export default function CubeScene({
             angle * (progress * progress * (3 - 2 * progress)),
         )
         if (progress === 1) finish()
-    })
+    }, -3)
     const cubieMesh = (cubie: Cubie) => (
         <group key={cubie.id} position={cubie.position.map((v) => v / 2) as Vec}>
             <mesh
                 geometry={resources.body}
-                material={selectedId === cubie.id ? resources.selected : resources.plastic}
+                material={resources.plastic}
                 onClick={(event) => {
                     event.stopPropagation()
                     onSelect(cubie.id)
                 }}
             />
+            {selectedId === cubie.id && (
+                <SelectedPiece
+                    id={cubie.id}
+                    geometry={resources.body}
+                    normals={cubie.stickers.map((sticker) => sticker.normal)}
+                    bridge={selectionFocus}
+                />
+            )}
             {cubie.stickers.map((sticker) => {
                 const rotation = new Quaternion().setFromUnitVectors(
                     new Vector3(0, 0, 1),

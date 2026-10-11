@@ -8,6 +8,7 @@ import { affectedLayer, transform, type Cubie, type Move } from '../rubiks/model
 import { transitionDuration, turnAxisAngle, turnTransition } from '../rubiks/transition'
 import { homeGeometry } from './model'
 import type { MirrorState } from './replay'
+import SelectedPiece from '../../../visual/SelectedPiece'
 
 export default function MirrorScene({
     state,
@@ -15,6 +16,7 @@ export default function MirrorScene({
     onSelect,
     reducedMotion,
     playback,
+    selectionFocus,
 }: SceneProps<MirrorState>) {
     const resources = useMemo(
         () => ({
@@ -34,13 +36,6 @@ export default function MirrorScene({
                 bumpMap: tactileTexture,
                 bumpScale: 0.009,
             }),
-            selected: new MeshStandardMaterial({
-                color: '#d1ad64',
-                metalness: 0.8,
-                roughness: 0.42,
-                bumpMap: tactileTexture,
-                bumpScale: 0.009,
-            }),
         }),
         [],
     )
@@ -48,7 +43,6 @@ export default function MirrorScene({
         () => () => {
             resources.geometries.forEach((g) => g.dispose())
             resources.metal.dispose()
-            resources.selected.dispose()
         },
         [resources],
     )
@@ -102,7 +96,7 @@ export default function MirrorScene({
             angle * p * p * (3 - 2 * p),
         )
         if (p === 1) finish()
-    })
+    }, -3)
     const mesh = (piece: Cubie) => {
         const center = transform(piece.basis, homeGeometry(piece.home).center)
         const basis = new Matrix4().makeBasis(
@@ -114,12 +108,31 @@ export default function MirrorScene({
                 position={center}
                 quaternion={new Quaternion().setFromRotationMatrix(basis)}
                 geometry={resources.geometries.get(piece.id)}
-                material={selectedId === piece.id ? resources.selected : resources.metal}
+                material={resources.metal}
                 onClick={(event) => {
                     event.stopPropagation()
                     onSelect(piece.id)
                 }}
-            />
+            >
+                {selectedId === piece.id && (
+                    <SelectedPiece
+                        id={piece.id}
+                        geometry={resources.geometries.get(piece.id)!}
+                        normals={piece.home.flatMap((v, axis) =>
+                            v === 0
+                                ? []
+                                : [
+                                      [
+                                          axis === 0 ? Math.sign(v) : 0,
+                                          axis === 1 ? Math.sign(v) : 0,
+                                          axis === 2 ? Math.sign(v) : 0,
+                                      ] as [number, number, number],
+                                  ],
+                        )}
+                        bridge={selectionFocus}
+                    />
+                )}
+            </mesh>
         )
     }
     const affected = (piece: Cubie) => moving !== null && affectedLayer(piece.position, moving, 3)

@@ -117,6 +117,8 @@ export default function App() {
     )
     const [selected, setSelected] = useState<string | null>(null)
     const [camera, setCamera] = useState<CameraCommand>({ preset: 'perspective', revision: 0 })
+    const [refocusRevision, setRefocusRevision] = useState(0)
+    const [replayRevision, setReplayRevision] = useState(0)
     const [compare, setCompare] = useState(false)
     const [compareId, setCompareId] = useState(initial.id)
     const [compareShared, setCompareShared] = useState<Params>({})
@@ -597,6 +599,7 @@ export default function App() {
     const restart = useCallback(() => {
         cueSourceRef.current = null
         setPlaying(false)
+        setReplayRevision((previous) => previous + 1)
         setIndex(0)
         if (activeModule.meta.id === 'rubiks-cube' && run?.snapshot().status === 'generating')
             setRestartVersion((version) => version + 1)
@@ -619,11 +622,13 @@ export default function App() {
             } else if (event.key === 'ArrowRight') {
                 event.preventDefault()
                 setPlaying(false)
+                setReplayRevision((previous) => previous + 1)
                 cueSourceRef.current = 'manual'
                 setIndex((old) => clampFrame(old + 1, total))
             } else if (event.key === 'ArrowLeft') {
                 event.preventDefault()
                 setPlaying(false)
+                setReplayRevision((previous) => previous + 1)
                 cueSourceRef.current = 'manual'
                 setIndex((old) => clampFrame(old - 1, total))
             } else if (event.key.toLowerCase() === 'r') {
@@ -848,7 +853,13 @@ export default function App() {
                                         cameraCommand={camera}
                                         reducedMotion={reducedMotion}
                                         theme={theme}
-                                        playback={{ frameIndex: scene.frame.index, playing, speed }}
+                                        playback={{
+                                            frameIndex: scene.frame.index,
+                                            playing,
+                                            speed,
+                                            revision: replayRevision,
+                                        }}
+                                        refocusRevision={refocusRevision}
                                     />
                                 </div>
                             </Suspense>
@@ -878,6 +889,20 @@ export default function App() {
                             </button>
                             <button onClick={() => cameraPreset('top')}>Top</button>
                             <button onClick={() => cameraPreset('side')}>Side</button>
+                            {selected !== null &&
+                                inspection &&
+                                ['rubiks-cube', 'mirror-cube', 'square-one'].includes(
+                                    activeModule.meta.id,
+                                ) && (
+                                    <button
+                                        aria-label="Refocus selected piece"
+                                        onClick={() =>
+                                            setRefocusRevision((previous) => previous + 1)
+                                        }
+                                    >
+                                        Refocus piece
+                                    </button>
+                                )}
                         </div>
                     </section>
                     {(snapshot.status === 'cancelled' ||
@@ -929,6 +954,7 @@ export default function App() {
                                 onClick={() => {
                                     run?.cancel()
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     setTraceVersion((value) => value + 1)
                                 }}
                             >
@@ -945,6 +971,7 @@ export default function App() {
                                 onClick={() => {
                                     cueSourceRef.current = null
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     setIndex(0)
                                 }}
                             >
@@ -956,6 +983,7 @@ export default function App() {
                                 disabled={!frame || index === 0}
                                 onClick={() => {
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     cueSourceRef.current = 'manual'
                                     setIndex((old) => clampFrame(old - 1, total))
                                 }}
@@ -982,6 +1010,7 @@ export default function App() {
                                 disabled={!frame || index >= total - 1}
                                 onClick={() => {
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     cueSourceRef.current = 'manual'
                                     setIndex((old) => clampFrame(old + 1, total))
                                 }}
@@ -995,6 +1024,7 @@ export default function App() {
                                 onClick={() => {
                                     cueSourceRef.current = null
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     setIndex(Math.max(0, total - 1))
                                 }}
                             >
@@ -1033,6 +1063,7 @@ export default function App() {
                                 onChange={(event) => {
                                     cueSourceRef.current = null
                                     setPlaying(false)
+                                    setReplayRevision((previous) => previous + 1)
                                     setIndex(Number(event.target.value))
                                 }}
                             />

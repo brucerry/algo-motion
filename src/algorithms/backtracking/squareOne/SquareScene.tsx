@@ -7,6 +7,7 @@ import { sliceAxis } from './model'
 import { squareGeometry } from './geometry'
 import { squareTransition, type SquareTransition } from './transition'
 import type { SquareState } from './replay'
+import SelectedPiece from '../../../visual/SelectedPiece'
 
 const axis = new Vector3(...sliceAxis),
     up = new Vector3(0, 1, 0)
@@ -16,6 +17,7 @@ export default function SquareScene({
     onSelect,
     reducedMotion,
     playback,
+    selectionFocus,
 }: SceneProps<SquareState>) {
     const resources = useMemo(
         () => ({
@@ -37,12 +39,6 @@ export default function SquareScene({
                         bumpScale: 0.008,
                     }),
             ),
-            selected: new MeshStandardMaterial({
-                color: '#d1ad64',
-                roughness: 0.5,
-                bumpMap: tactileTexture,
-                bumpScale: 0.008,
-            }),
         }),
         [],
     )
@@ -50,7 +46,6 @@ export default function SquareScene({
         () => () => {
             resources.geometries.forEach((g) => g.dispose())
             resources.materials.forEach((m) => m.dispose())
-            resources.selected.dispose()
         },
         [resources],
     )
@@ -112,7 +107,7 @@ export default function SquareScene({
             )
         }
         if (p === 1) finish()
-    })
+    }, -3)
     const groupOf = (id: number) => {
         if (!moving) return 'fixed'
         if (moving.move.kind === 'slice')
@@ -133,12 +128,31 @@ export default function SquareScene({
                 key={id}
                 geometry={resources.geometries[id]}
                 quaternion={quaternion}
-                material={selectedId === String(id) ? resources.selected : resources.materials}
+                material={resources.materials}
                 onClick={(event) => {
                     event.stopPropagation()
                     onSelect(String(id))
                 }}
-            />
+            >
+                {selectedId === String(id) && (
+                    <SelectedPiece
+                        id={String(id)}
+                        geometry={resources.geometries[id]}
+                        normals={
+                            id < 16
+                                ? [[0, id < 8 ? 1 : -1, 0]]
+                                : [
+                                      [
+                                          sliceAxis[0] * (id === 17 ? 1 : -1),
+                                          0,
+                                          sliceAxis[2] * (id === 17 ? 1 : -1),
+                                      ],
+                                  ]
+                        }
+                        bridge={selectionFocus}
+                    />
+                )}
+            </mesh>
         )
     }
     const pieces = (group: string) =>

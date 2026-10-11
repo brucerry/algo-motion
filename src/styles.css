@@ -82,6 +82,20 @@ button {
         ),
         repeating-linear-gradient(0deg, transparent 0 31px, var(--line) 32px 33px);
 }
+.selection-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.canvas-host {
+    position: relative;
+}
+
 .app select,
 .app option,
 .app optgroup {
@@ -388,6 +402,7 @@ button {
 }
 .cube-details select {
     max-width: 100%;
+    padding: 6px 9px;
 }
 .compare-switcher {
     display: flex;

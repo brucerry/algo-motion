@@ -1,9 +1,11 @@
-import { Suspense, useEffect, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import type { RegisteredAlgorithm } from '../engine/registry'
 import type { Frame, SceneProps } from '../engine/types'
 import { scenePalette, type Theme } from '../visual/scenePalette'
 import { OrbitControls } from '../visual/vendor/OrbitControls.js'
+import { SelectionFocusBridge } from '../visual/selectionFocus'
+import PieceFocusRig from '../visual/PieceFocusRig'
 
 export type CameraCommand = { preset: 'perspective' | 'top' | 'side'; revision: number }
 
@@ -12,16 +14,18 @@ function CameraRig({
     algorithm,
     state,
     reducedMotion,
+    selectionFocus,
 }: {
     command: CameraCommand
     algorithm: RegisteredAlgorithm
     state: unknown
     reducedMotion: boolean
+    selectionFocus?: SelectionFocusBridge
 }) {
     const { camera, gl, invalidate, get, set } = useThree()
     const framing = algorithm.cameraForState?.(state) ?? algorithm.meta.camera
     // A fresh controller clears residual drag/zoom/pan momentum on a camera reset.
-    const controlsKey = JSON.stringify([command, algorithm.meta.id, framing, reducedMotion])
+    const controlsKey = JSON.stringify([command, algorithm.meta.id, framing])
     const controls = useMemo(() => {
         const controller = new OrbitControls(camera)
         controller.enableFullRotation = true
@@ -46,6 +50,10 @@ function CameraRig({
         }
     }, [controls, gl, invalidate, get, set])
     useEffect(() => {
+        controls.enableDamping = !reducedMotion
+        if (reducedMotion) controls.clearMotion()
+    }, [controls, reducedMotion])
+    useEffect(() => {
         const distance = framing?.distance ?? 21
         const targetY = framing?.targetY ?? 0
         const position: [number, number, number] =
@@ -68,14 +76,15 @@ function CameraRig({
         algorithm,
         camera,
         controls,
-        reducedMotion,
         framing?.distance,
         framing?.targetY,
         framing?.perspective?.[0],
         framing?.perspective?.[1],
         framing?.perspective?.[2],
     ])
-    useFrame(() => controls.update(), -1)
+    useFrame(() => {
+        if (!selectionFocus?.driving) controls.update()
+    }, -1.5)
     return null
 }
 
@@ -88,6 +97,7 @@ export default function VisualizationCanvas({
     reducedMotion,
     theme,
     playback,
+    refocusRevision = 0,
 }: {
     algorithm: RegisteredAlgorithm
     frame: Frame<any>
@@ -97,20 +107,71 @@ export default function VisualizationCanvas({
     reducedMotion: boolean
     theme: Theme
     playback?: SceneProps<unknown>['playback']
+    refocusRevision?: number
 }) {
     const Renderer = algorithm.renderer
     const palette = scenePalette(theme)
+    const bridge = useMemo(() => new SelectionFocusBridge(), [algorithm.meta.id])
+    const overlay = useRef<SVGSVGElement>(null)
+    const gesture = useRef({
+        x: 0,
+        y: 0,
+        moved: false,
+        revision: 0,
+        cameraRevision: 0,
+        playing: false,
+        started: 0,
+    })
+    const focusEnabled = ['rubiks-cube', 'mirror-cube', 'square-one'].includes(algorithm.meta.id)
     return (
         <div
             className="canvas-host"
             id="visualization"
             role="group"
             aria-label={`${algorithm.meta.name} 3D visualization`}
+            onPointerDownCapture={(event) => {
+                gesture.current = {
+                    x: event.clientX,
+                    y: event.clientY,
+                    moved: false,
+                    revision: playback?.revision ?? 0,
+                    cameraRevision: cameraCommand.revision,
+                    playing: playback?.playing ?? false,
+                    started: performance.now(),
+                }
+            }}
+            onPointerMoveCapture={(event) => {
+                if (
+                    event.buttons &&
+                    Math.hypot(
+                        event.clientX - gesture.current.x,
+                        event.clientY - gesture.current.y,
+                    ) > 3
+                )
+                    gesture.current.moved = true
+            }}
+            onClickCapture={(event) => {
+                if (
+                    gesture.current.moved ||
+                    gesture.current.revision !== (playback?.revision ?? 0) ||
+                    gesture.current.cameraRevision !== cameraCommand.revision ||
+                    (gesture.current.playing && !playback?.playing) ||
+                    (focusEnabled &&
+                        selectedId !== null &&
+                        (gesture.current.playing || playback?.playing) &&
+                        performance.now() - gesture.current.started > 180)
+                ) {
+                    event.stopPropagation()
+                    event.preventDefault()
+                }
+            }}
         >
             <Canvas
                 camera={{ position: [14, 16, 14], fov: 48 }}
                 dpr={[1, 1.8]}
-                onPointerMissed={() => onSelect(null)}
+                onPointerMissed={() => {
+                    if (!gesture.current.moved) onSelect(null)
+                }}
                 fallback={
                     <div className="canvas-fallback">
                         3D view is unavailable. Follow the synchronized step text below.
@@ -130,7 +191,20 @@ export default function VisualizationCanvas({
                     algorithm={algorithm}
                     state={frame.state}
                     reducedMotion={reducedMotion}
+                    selectionFocus={focusEnabled ? bridge : undefined}
                 />
+                {focusEnabled && (
+                    <PieceFocusRig
+                        bridge={bridge}
+                        selectedId={selectedId}
+                        playback={playback}
+                        presetRevision={cameraCommand.revision}
+                        refocusRevision={refocusRevision}
+                        reducedMotion={reducedMotion}
+                        theme={theme}
+                        overlay={overlay}
+                    />
+                )}
                 <Suspense fallback={null}>
                     <Renderer
                         key={algorithm.meta.id}
@@ -140,9 +214,53 @@ export default function VisualizationCanvas({
                         reducedMotion={reducedMotion}
                         theme={theme}
                         playback={playback}
+                        selectionFocus={focusEnabled ? bridge : undefined}
                     />
                 </Suspense>
             </Canvas>
+            {focusEnabled && (
+                <svg
+                    ref={overlay}
+                    className="selection-overlay"
+                    aria-hidden="true"
+                    focusable="false"
+                    visibility="hidden"
+                >
+                    {Array.from({ length: 12 }, (_, index) => (
+                        <path
+                            key={index}
+                            data-afterimage=""
+                            fill="none"
+                            strokeWidth="3"
+                            opacity="0"
+                        />
+                    ))}
+                    <path
+                        data-outline=""
+                        data-halo=""
+                        fill="none"
+                        stroke={palette.focus}
+                        strokeWidth="9"
+                        opacity="0.3"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        data-outline=""
+                        fill="none"
+                        stroke={palette.focusBacking}
+                        strokeWidth="4"
+                        opacity="0.9"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        data-outline=""
+                        fill="none"
+                        stroke={palette.focus}
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                    />
+                </svg>
+            )}
         </div>
     )
 }
