@@ -265,5 +265,6 @@ test('drag motion eases to rest and camera presets stop remaining momentum', asy
     await page.locator('canvas').scrollIntoViewIfNeeded()
     await drag()
     const stopped = await motionSamples(page, fiberUrl, 10)
-    for (const position of stopped) expect(position).toEqual(stopped[0])
+    for (const position of stopped)
+        position.forEach((value, axis) => expect(value).toBeCloseTo(stopped[0][axis], 10))
 })

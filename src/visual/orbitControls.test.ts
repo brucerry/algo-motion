@@ -47,6 +47,31 @@ function pointer(element: HTMLElement | Document, type: string, x: number, y: nu
 }
 
 describe('unrestricted orbit controls', () => {
+    it('clears residual motion for an external focus pose without retuning the next gesture', () => {
+        const { camera, controls, element } = setup(false, true)
+        const focused = controls as OrbitControls
+        pointer(element, 'pointerdown', 200, 200)
+        pointer(document, 'pointermove', 240, 220)
+        pointer(document, 'pointerup', 240, 220)
+        focused.clearMotion()
+        controls.target.set(1, -1, 0.5)
+        camera.position.set(-6, 4, -7)
+        camera.up.set(0, 1, 0)
+        camera.lookAt(controls.target)
+        camera.updateMatrixWorld()
+        const position = camera.position.clone()
+        for (let i = 0; i < 30; i++) controls.update()
+        expect(camera.position.distanceTo(position)).toBeLessThan(1e-9)
+        const distance = controls.getDistance()
+        element.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }))
+        expect(controls.getDistance() / distance).toBeCloseTo(0.95)
+        camera.updateMatrixWorld()
+        const before = camera.quaternion.clone()
+        pointer(element, 'pointerdown', 200, 200)
+        pointer(document, 'pointermove', 195, 200)
+        expect(camera.quaternion.angleTo(before)).toBeCloseTo(((2 * Math.PI * 5) / 400) * 0.05)
+        pointer(document, 'pointerup', 195, 200)
+    })
     it('matches the original drag, damping, wheel zoom, and pan response before crossing a pole', () => {
         const original = setup(true)
         const extended = setup()
