@@ -194,12 +194,18 @@ for (const speed of ['0.25', '1', '32'])
         await expect
             .poll(async () => (await pose()).radius / zoomBefore.radius)
             .toBeCloseTo(0.95, 3)
+        // Start the pause-during-return check from a fresh replay. At 32x the
+        // preceding zoom assertions can consume the remaining trace on CI.
+        await page.keyboard.press('r')
+        await expect(overlay).toHaveAttribute('data-focus-mode', 'free')
+        await page.keyboard.press('Space')
+        await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
         // Pause during an elastic return: retained pose and no stale release.
         await page.mouse.down()
         await page.mouse.move(point.x - 65, point.y + 30, { steps: 6 })
         await page.mouse.up()
         await expect(overlay).toHaveAttribute('data-focus-mode', 'returning')
-        await page.keyboard.press('Space')
+        await page.getByRole('button', { name: 'Pause', exact: true }).click()
         await expect(overlay).toHaveAttribute('data-focus-mode', 'free')
         const paused = await pose()
         await page.waitForTimeout(800)
