@@ -15,5 +15,9 @@ screen direction through upside-down, rolled, and pole views. Rotation uses
 the upstream input angles and damping directly, without a second camera or
 additional smoothing. Algorithm coordinates and move notation remain fixed.
 
+`clearMotion()` clears accumulated rotation, pan and zoom deltas before the
+selected-piece camera adopts an external pose. It leaves gesture positions,
+input ratios and the current view-relative rotation basis intact.
+
 The local declaration reuses the upstream public API. Source-map references
 are removed; imported dependencies are local or existing Three.js dependencies.

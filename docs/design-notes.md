@@ -18,6 +18,12 @@ The shared camera allows continuous horizontal and vertical rotation through bot
 
 Camera orientation is independent of algorithm coordinates. A cube face letter or a path-planning axis retains its meaning as the camera moves. Top, Side, and default perspective presets restore an upright view.
 
+Puzzle selection publishes the selected body's actual world transform after its animated turn, including temporary rotation parents. Camera composition uses physical bounds and exposed normals, with an exterior orbit and nearby context. This handles unequal Mirror pieces and Square-1 wedges without changing solver state or rebuilding the controller during motion.
+
+One camera owner applies updates: ordinary controls while a mouse/touch gesture is held or playback is inactive, and piece tracking while playing. Release during playback begins a time-based damped return to the established piece view; new input interrupts immediately. Pause, completion, cancellation, seeking and restart cancel that return. Restart retains the current pose. Refocus and new selection restore piece framing; presets suspend follow until explicit reactivation.
+
+The crisp selected-body boundary is projected into a pointer-transparent canvas overlay. Adjacent face normals hide rear edges; briefly obscured pieces use a faint dashed boundary. The original materials remain unchanged. A separate two-second halo pulse and at most twelve recent outline contours provide breathing and fading trails, including camera-only motion. Samples expire after 550 ms, and selection, replay, preset, viewport, hidden-tab and disposal transitions clear stale history. Reduced motion disables these decorative effects and replaces springs with discrete framing updates.
+
 The controls are adapted from three-stdlib 2.36.1. The [vendor notes](../src/visual/vendor/README.md) describe the local adaptations, and its [MIT license](../public/licenses/three-stdlib-MIT.txt) is distributed with the site. This preserves the familiar interaction while allowing the full rotation used by the scenes.
 
 ## Rubik’s Cube solving and replay

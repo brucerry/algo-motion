@@ -21,6 +21,14 @@ Use the transport bar to play, pause, step forward or backward, restart, or scru
 
 Rotation is continuous through 360° horizontally and vertically. Drag directions follow the current view even upside down; camera rotation does not change algorithm coordinates or cube move notation. See [camera design](design-notes.md#camera-motion) for implementation details.
 
+Selecting a Rubik’s Cube, Mirror Cube, or Square-1 piece adds a sharp colored outline and gently breathing halo, then brings it into an oblique view with neighboring pieces visible. The original sticker colors and metallic finish remain intact. A short fading outline trail follows camera or piece movement.
+
+While playing, the camera follows that physical piece. Holding the mouse button or a touch gesture gives you direct control, even before you move. Releasing while playback continues returns the camera to the piece with a brief elastic settle and retains your zoom within the framing bounds. You can interrupt the return with another gesture.
+
+When stopped, paused, completed, or restarted, you can drag freely and keep the released view. Restart preserves your camera pose while restoring the exact initial puzzle. **Refocus piece** restores the selected view without changing the timeline. Camera presets suspend following until a new selection, refocus, or a subsequent Play action. Clearing selection keeps the current camera view.
+
+Reduced motion keeps a steady outline, omits the halo pulse and trails, and uses discrete focus updates. Releasing a gesture alone does not reposition the camera in this mode.
+
 | Shortcut     | Action               |
 | ------------ | -------------------- |
 | Space        | Play or pause        |
