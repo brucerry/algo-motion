@@ -1,8 +1,11 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { initializeTestCubeSolver } from './solver.test-support'
 import { solveCube } from './solver'
 import { initialCubeFrame, verifiedReplay } from './replay'
 import { applyMoves, facelets, isSolved, parseMoves, solvedCube } from './model'
+
+beforeAll(initializeTestCubeSolver)
 
 describe('verified two-phase solver', () => {
     it('solves real short, standard, long, and maximum scrambles deterministically', () => {

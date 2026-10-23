@@ -31,6 +31,8 @@ Grid search, N-Queens, Insertion/Quick/Merge Sort, In-order Traversal, Coin Chan
 
 Rubik’s Cube, Mirror Cube and Square-1 use dedicated workers for table preparation and state-only search. The shared [solution lifecycle](../src/engine/solutionTrace.ts) cancels workers, guards generations, and publishes compact paths only after puzzle-specific verification. [Checkpoint replay](../src/engine/checkpointReplay.ts) validates in yielding chunks, stores a checkpoint every 32 frames and up to 64 cached frames, and reconstructs every requested index without a step ceiling. Obsolete asynchronous seeks cannot replace a newer requested state. Scenes derive rigid transforms from exact model state; camera orientation remains independent. See [the solver explanation](design-notes.md#rubiks-cube-solving-and-replay).
 
+The shared 3×3 two-phase search and coordinate tables run in a dependency-free [Rust/WASM engine](../wasm/cube-solver/README.md), loaded as a static asset inside the cube and Mirror workers. Rust owns compact integer tables and search; TypeScript retains larger-cube reduction, deterministic scrambles, and independent move/phase/geometry verification. Worker termination cancels loading or computation and releases its WASM memory. The legacy JavaScript search is retained only for differential tests and benchmarks. See [solver measurements and methodology](cube-solver-performance.md).
+
 ## Parameters and reproducibility
 
 [types.ts](../src/engine/types.ts) defines number, boolean, select, and seed parameters. The same definitions drive the panel and input/URL validation. Numeric definitions declare minimum, maximum, optional step and slider presentation, and optional bounds derived from other parameters.

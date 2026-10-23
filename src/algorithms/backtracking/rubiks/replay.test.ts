@@ -1,8 +1,11 @@
 // @vitest-environment node
-import { expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
+import { initializeTestCubeSolver } from './solver.test-support'
 import { indexedCubeReplay, initialCubeFrame, verifiedReplay } from './replay'
 import { applyMoves, inverse, notation, parseMoves, solvedCube } from './model'
 import { findCubeSolution } from './solver'
+
+beforeAll(initializeTestCubeSolver)
 
 it('reconstructs long complete cube paths exactly without counting phase frames as moves', async () => {
     const initial = initialCubeFrame({ seed: 42, scrambleLength: 1 })

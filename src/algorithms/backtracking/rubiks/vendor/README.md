@@ -12,4 +12,4 @@ Local adaptations:
 - Both phase searches permit zero-depth completion; phase-2 initialization also merges root coordinates when phase 1 has zero moves.
 - Formatting follows repository Prettier configuration. Move ordering and pruning tables are unchanged.
 
-Only the cube worker imports search code in production. The npm package is not installed; its unrelated npm dependency is unnecessary here.
+These files are retained as a differential-test and benchmark reference. Production cube and Mirror workers use the [Rust/WASM port](../../../../../wasm/cube-solver/README.md) and do not import this JavaScript search. The npm package is not installed; its unrelated npm dependency is unnecessary here.

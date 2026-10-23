@@ -25,11 +25,17 @@ jobs:
                   node-version: '24'
                   cache: npm
             - run: npm ci
+            - run: rustup show active-toolchain
+            - run: cargo fmt --manifest-path wasm/cube-solver/Cargo.toml --check
+            - run: cargo clippy --locked --release --manifest-path wasm/cube-solver/Cargo.toml -- -D warnings
+            - run: cargo clippy --locked --release --target wasm32-unknown-unknown --manifest-path wasm/cube-solver/Cargo.toml -- -D warnings
+            - run: npm run test:rust
             - run: npm run format:check
             - run: npm run typecheck
             - run: npm test
             - run: npx playwright install --with-deps chromium
             - run: npm run test:e2e
+            - run: npm run test:e2e:wasm
             - run: npm run build
             - if: github.event_name != 'pull_request'
               uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6

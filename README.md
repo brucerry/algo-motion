@@ -25,7 +25,7 @@ The deployed app runs entirely in your browser; no account or backend is require
 
 ## Quick start
 
-Use Node.js 20.19.x or Node.js 22.12 or newer, and npm.
+Use Node.js 20.19.x or Node.js 22.12 or newer, npm, and [Rust via rustup](https://rust-lang.org/tools/install/). The pinned Rust toolchain builds the browser cube solver automatically.
 
 ```bash
 npm ci

@@ -4,12 +4,14 @@
 
 ## Local setup
 
-Use Node.js 20.19.x or Node.js 22.12 or newer, and npm. The deployment workflow uses Node.js 24. The checked-in lockfile makes clean installs repeatable.
+Use Node.js 20.19.x or Node.js 22.12 or newer, npm, and Rust installed through [rustup](https://rust-lang.org/tools/install/). The root `rust-toolchain.toml` pins Rust 1.90.0, formatting tools, and the `wasm32-unknown-unknown` target; rustup installs these on first use. The deployment workflow uses Node.js 24. The checked-in lockfiles make clean installs repeatable.
 
 ```bash
 npm ci
 npm run dev
 ```
+
+Development, unit tests, and production builds automatically compile the dependency-free Rust cube solver. `npm run wasm:build` builds it explicitly. Generated WASM and Cargo targets are ignored; the deployed site needs no Rust installation. See [the Rust engine and ABI](../wasm/cube-solver/README.md).
 
 Open the local URL printed by Vite.
 
@@ -23,12 +25,22 @@ npm run build
 npm run preview
 ```
 
+Validate the native Rust core and formatting as well:
+
+```sh
+npm run test:rust
+cargo fmt --manifest-path wasm/cube-solver/Cargo.toml --check
+cargo clippy --locked --release --manifest-path wasm/cube-solver/Cargo.toml -- -D warnings
+```
+
 Browser tests use Playwright and Chromium:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
 ```
+
+`npm run test:e2e:wasm` builds and tests production delivery under `/rust-check/`, including real WASM execution, load failures, and cancellation while loading. CI runs this alongside the full browser suite.
 
 On Linux, Chromium may need additional system libraries; use `npx playwright install --with-deps chromium`. GitHub Actions installs those dependencies. Browser coverage includes all eight topics, URL and parameter validation, comparison, mobile layout, camera controls, keyboard shortcuts, optional sound, learning-panel characters, cube solving/replay, and accessibility checks.
 
@@ -37,6 +49,10 @@ To format the documentation pages as well as the README:
 ```bash
 npx prettier --write README.md "docs/*.md"
 ```
+
+## Solver performance
+
+On Node.js 24 or newer, `npm run benchmark:cube` compares release Rust/WASM against the legacy and compact typed-array JavaScript implementations in separate processes. See [measurements and methodology](cube-solver-performance.md); these diagnostics exclude network, rendering, and replay verification.
 
 ## Add an algorithm
 

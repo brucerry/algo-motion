@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
+import { initializeTestCubeSolver } from '../rubiks/solver.test-support'
 import {
     applyMoves,
     facelets,
@@ -13,6 +14,8 @@ import {
 import { findCubeSolution } from '../rubiks/solver'
 import { homeGeometry, isMirrorSolved, physicalBox } from './model'
 import { initialMirrorFrame, inspectMirror, mirrorReplay } from './replay'
+
+beforeAll(initializeTestCubeSolver)
 
 it('tiles the fixed exterior with unequal boxes and six square center faces', () => {
     const cube = solvedCube(),

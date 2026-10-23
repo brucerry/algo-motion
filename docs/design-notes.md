@@ -51,7 +51,7 @@ Forward and reverse stepping turn the correct layer. Scrubbing shows the exact r
 
 ### Implementation attribution
 
-The solver is selectively vendored from [cube.js](https://github.com/ldez/cubejs/tree/6b3da493894d9aed54f4c8aafccadbe676e745b5). Its npm package is not required. [Vendor notes](../src/algorithms/backtracking/rubiks/vendor/README.md) record the pinned revision and local adaptations; its [MIT license](../public/licenses/cubejs-MIT.txt) is included in the deployed site.
+The Rust/WASM search ports the coordinate conventions, move order, and pruning layout from [cube.js](https://github.com/ldez/cubejs/tree/6b3da493894d9aed54f4c8aafccadbe676e745b5). Its npm package is not required. See [the Rust engine](../wasm/cube-solver/README.md) for the ABI and build; the vendored JavaScript search remains a test and benchmark reference. [Vendor notes](../src/algorithms/backtracking/rubiks/vendor/README.md) record the pinned revision and local adaptations; its [MIT license](../public/licenses/cubejs-MIT.txt) is included in the deployed site.
 
 ## Mirror Cube
 

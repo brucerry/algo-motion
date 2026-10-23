@@ -1,4 +1,5 @@
 import { findCubeSolution } from '../algorithms/backtracking/rubiks/solver'
+import { initializeCubeSolver } from '../algorithms/backtracking/rubiks/wasm'
 import {
     initialMirrorFrame,
     mirrorReplay,
@@ -9,6 +10,7 @@ self.onmessage = async (event: MessageEvent<{ generationId: number; params: Mirr
     const send = (data: object) => self.postMessage({ ...data, generationId })
     try {
         const initial = initialMirrorFrame(params)
+        await initializeCubeSolver()
         const solution = findCubeSolution(initial, (message) => send({ type: 'stage', message }))
         await mirrorReplay(initial, solution)
         send({ type: 'solution', solution })

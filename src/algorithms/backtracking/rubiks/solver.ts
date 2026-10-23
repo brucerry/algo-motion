@@ -1,6 +1,5 @@
 // Imported only by the dedicated worker and solver correctness tests.
-import SolverCube from './vendor/cube.js'
-import './vendor/solve.js'
+import { cubeEngine } from './wasm'
 import { cubeSize, notation, threeFacelets as facelets, isSolved } from './model'
 import { reduceCube } from './reduction'
 import { cubeFromFacelets, reducedFacelets } from './reductionState'
@@ -26,12 +25,10 @@ export function findCubeSolution(
         }
     }
     stage('Preparing solver tables…')
-    SolverCube.initSolver()
+    const solver = cubeEngine()
+    solver.prepare()
     stage('Searching for a two-phase solution…')
-    const solver = SolverCube.fromString(facelets(initial.state.cube))
-    const result = solver.solveUpright(30)
-    if (result === null) throw new Error('Search did not return a solution for this legal cube.')
-    return { notation: result, phase1Length: solver.solutionPhase1Length }
+    return solver.solve(facelets(initial.state.cube))
 }
 
 export function solveCube(
