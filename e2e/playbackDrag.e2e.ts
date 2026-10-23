@@ -115,18 +115,20 @@ for (const selected of [false, true])
                 )
             }
             await page.getByLabel('Execution speed').selectOption(speed)
-            await page.getByRole('button', { name: 'Play', exact: true }).click()
             await page.locator('canvas').scrollIntoViewIfNeeded()
             const box = (await page.locator('canvas').boundingBox())!
             const x = box.x + box.width * 0.5
             const y = box.y + box.height * 0.5
             await page.mouse.move(x, y)
             await page.mouse.down()
-            await page.mouse.move(x + 55, y + 20, { steps: 6 })
+            // Start the replay at the gesture. At 32x, scrolling and a long
+            // synthetic input sequence can otherwise exhaust the trace on CI.
+            await page.keyboard.press('Space')
+            await page.mouse.move(x + 55, y + 20, { steps: 2 })
             const first = (await pose())!
             await expect.poll(async () => (await pose())!.frame).toBeGreaterThan(first.frame + 2)
             const held = (await pose())!
-            await page.mouse.move(x + 110, y + 40, { steps: 6 })
+            await page.mouse.move(x + 110, y + 40, { steps: 2 })
             const second = (await pose())!
             expect(second.position).not.toEqual(held.position)
             if (selected)
