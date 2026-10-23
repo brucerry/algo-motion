@@ -850,6 +850,7 @@ export default function App() {
                                         frame={scene.frame}
                                         onSelect={setSelected}
                                         selectedId={selected}
+                                        focusScope={run}
                                         cameraCommand={camera}
                                         reducedMotion={reducedMotion}
                                         theme={theme}

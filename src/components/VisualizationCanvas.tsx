@@ -93,6 +93,7 @@ export default function VisualizationCanvas({
     frame,
     onSelect,
     selectedId,
+    focusScope,
     cameraCommand,
     reducedMotion,
     theme,
@@ -103,6 +104,7 @@ export default function VisualizationCanvas({
     frame: Frame<any>
     onSelect: (id: string | null) => void
     selectedId: string | null
+    focusScope: object | null
     cameraCommand: CameraCommand
     reducedMotion: boolean
     theme: Theme
@@ -195,8 +197,10 @@ export default function VisualizationCanvas({
                 />
                 {focusEnabled && (
                     <PieceFocusRig
+                        key={algorithm.meta.id}
                         bridge={bridge}
                         selectedId={selectedId}
+                        focusScope={focusScope}
                         playback={playback}
                         presetRevision={cameraCommand.revision}
                         refocusRevision={refocusRevision}

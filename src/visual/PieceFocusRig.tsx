@@ -14,9 +14,17 @@ import {
 } from './selectionFocus'
 
 type ReturnPose = { direction: Vector3; target: Vector3; up: Vector3; elapsed: number }
+type UnselectedView = {
+    controls: OrbitControls
+    position: Vector3
+    target: Vector3
+    up: Vector3
+    zoom: number
+}
 export default function PieceFocusRig({
     bridge,
     selectedId,
+    focusScope,
     playback,
     presetRevision,
     refocusRevision,
@@ -26,6 +34,7 @@ export default function PieceFocusRig({
 }: {
     bridge: SelectionFocusBridge
     selectedId: string | null
+    focusScope: object | null
     playback?: SceneProps<unknown>['playback']
     presetRevision: number
     refocusRevision: number
@@ -38,6 +47,7 @@ export default function PieceFocusRig({
     const owner = useMemo(() => new FocusOwnership(), [])
     const history = useMemo(() => new OutlineHistory(), [])
     const returning = useRef<ReturnPose | null>(null)
+    const unselectedView = useRef<UnselectedView | null>(null)
     const radius = useRef(0)
     const previousFrame = useRef(playback?.frameIndex ?? 0)
     const latest = useRef({ playing: playback?.playing ?? false, reducedMotion })
@@ -79,14 +89,45 @@ export default function PieceFocusRig({
             ?.querySelectorAll('[data-afterimage]')
             .forEach((path) => path.setAttribute('opacity', '0'))
     }
+    const rememberView = () => {
+        if (!controls || unselectedView.current) return
+        unselectedView.current = {
+            controls,
+            position: camera.position.clone(),
+            target: controls.target.clone(),
+            up: camera.up.clone(),
+            zoom: camera.zoom,
+        }
+    }
+    // Invalidate before handling a lifecycle deselection, so an old puzzle or
+    // explicit preset cannot be overwritten by a stale focus-session pose.
+    useLayoutEffect(() => {
+        unselectedView.current = null
+    }, [bridge, focusScope, controls, presetRevision])
     useLayoutEffect(() => {
         bridge.select(selectedId)
         cancel()
         clearTrail()
         if (!selectedId) radius.current = 0
         resources.focusDirection = null
-        if (selectedId) owner.select()
-        else owner.clear()
+        if (selectedId) {
+            rememberView()
+            owner.select()
+        } else {
+            owner.clear()
+            const saved = unselectedView.current
+            unselectedView.current = null
+            if (saved && saved.controls === controls) {
+                controls.clearMotion()
+                controls.target.copy(saved.target)
+                camera.position.copy(saved.position)
+                camera.up.copy(saved.up)
+                camera.zoom = saved.zoom
+                camera.updateProjectionMatrix()
+                controls.update()
+                camera.updateMatrixWorld()
+            }
+        }
     }, [selectedId, bridge])
     useLayoutEffect(() => {
         const playing = playback?.playing ?? false
@@ -214,6 +255,9 @@ export default function PieceFocusRig({
         const automatic = !owner.held && (owner.mode === 'returning' || owner.mode === 'following')
         bridge.driving = automatic
         if (automatic) {
+            // Controls may become available after the selection layout effect,
+            // or focus may have been reactivated from an explicit preset.
+            rememberView()
             let root = piece.owner
             while (root.parent && root.parent !== scene) root = root.parent
             root.updateWorldMatrix(true, true)

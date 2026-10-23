@@ -109,13 +109,18 @@ for (const width of [1440, 390])
             // Keyboard-accessible refocus changes composition, not replay or selection.
             await page.getByRole('button', { name: 'Top', exact: true }).click()
             await expect(overlay).toHaveAttribute('data-focus-mode', 'preset')
+            const unselectedView = await pose()
             await page.getByRole('button', { name: 'Refocus selected piece' }).focus()
             await page.keyboard.press('Enter')
             await expect(overlay).toHaveAttribute('data-focus-mode', 'free')
-            const beforeClear = await pose()
             await selector.selectOption('')
             await expect(overlay).toHaveAttribute('visibility', 'hidden')
-            expect((await pose()).position).toEqual(beforeClear.position)
+            const restored = await pose()
+            for (const field of ['position', 'target', 'up'] as const)
+                restored[field].forEach((value, axis) =>
+                    expect(value).toBeCloseTo(unselectedView[field][axis], 7),
+                )
+            expect(restored.radius).toBeCloseTo(unselectedView.radius, 7)
             expect(errors).toEqual([])
             expect(
                 await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),

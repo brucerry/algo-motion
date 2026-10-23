@@ -27,7 +27,7 @@ Selecting a Rubik’s Cube, Mirror Cube, or Square-1 piece adds a sharp colored 
 
 While playing, the camera follows that physical piece. Holding the mouse button or a touch gesture gives you direct control, even before you move. Releasing while playback continues returns the camera to the piece with a brief elastic settle and retains your zoom within the framing bounds. You can interrupt the return with another gesture.
 
-When stopped, paused, completed, or restarted, you can drag freely and keep the released view. Restart preserves your camera pose while restoring the exact initial puzzle. **Refocus piece** restores the selected view without changing the timeline. Camera presets suspend following until a new selection, refocus, or a subsequent Play action. Clearing selection keeps the current camera view.
+When stopped, paused, completed, or restarted, you can drag freely and keep the released view. Restart preserves your camera pose while restoring the exact initial puzzle. **Refocus piece** restores the selected view without changing the timeline. Camera presets suspend following until a new selection, refocus, or a subsequent Play action. Clearing selection with the selector's empty option or an empty-space click restores the view from before selecting a piece, including pan, orientation, and zoom, and leaves the camera freely draggable. Switching directly between pieces keeps that same return view. An explicit camera preset replaces an older return view; clearing while the preset is active keeps it.
 
 Reduced motion keeps a steady outline, omits the halo pulse and trails, and uses discrete focus updates. Releasing a gesture alone does not reposition the camera in this mode.
 
