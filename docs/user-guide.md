@@ -21,6 +21,8 @@ Use the transport bar to play, pause, step forward or backward, restart, or scru
 
 Rotation is continuous through 360° horizontally and vertically. Drag directions follow the current view even upside down; camera rotation does not change algorithm coordinates or cube move notation. See [camera design](design-notes.md#camera-motion) for implementation details.
 
+With no piece selected, releasing a mouse or touch drag lets the camera glide to rest with its usual damping, including during playback and after clearing a selection. Reduced motion stops the camera when the gesture ends.
+
 Selecting a Rubik’s Cube, Mirror Cube, or Square-1 piece adds a sharp colored outline and gently breathing halo, then brings it into an oblique view with neighboring pieces visible. The original sticker colors and metallic finish remain intact. A short fading outline trail follows camera or piece movement.
 
 While playing, the camera follows that physical piece. Holding the mouse button or a touch gesture gives you direct control, even before you move. Releasing while playback continues returns the camera to the piece with a brief elastic settle and retains your zoom within the framing bounds. You can interrupt the return with another gesture.

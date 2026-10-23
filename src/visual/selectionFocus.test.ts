@@ -10,6 +10,33 @@ import {
 } from './selectionFocus'
 
 describe('selected-piece camera ownership', () => {
+    it('leaves unselected playback free, including Play during a held gesture', () => {
+        const owner = new FocusOwnership()
+        owner.play(true)
+        expect(owner.mode).toBe('free')
+        expect(owner.enabled).toBe(false)
+        owner.play(false)
+        owner.start()
+        owner.play(true)
+        expect(owner.mode).toBe('held')
+        owner.end(false)
+        expect(owner.mode).toBe('free')
+        expect(owner.enabled).toBe(false)
+    })
+    it('does not reactivate a cleared selection on release or subsequent Play', () => {
+        const owner = new FocusOwnership()
+        owner.select()
+        owner.play(true)
+        owner.start()
+        owner.clear()
+        owner.end(false)
+        expect(owner.mode).toBe('free')
+        owner.play(false)
+        owner.preset()
+        owner.play(true)
+        expect(owner.mode).toBe('free')
+        expect(owner.enabled).toBe(false)
+    })
     it('keeps held input direct across Play and only returns on active release', () => {
         const owner = new FocusOwnership()
         owner.select()
@@ -28,6 +55,7 @@ describe('selected-piece camera ownership', () => {
     })
     it('suspends presets until explicit reactivation and respects reduced motion', () => {
         const owner = new FocusOwnership()
+        owner.select()
         owner.play(true)
         owner.preset()
         owner.start()

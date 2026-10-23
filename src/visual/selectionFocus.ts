@@ -42,11 +42,14 @@ export class FocusOwnership {
     playing = false
     held = false
     enabled = false
+    private selected = false
     select() {
+        this.selected = true
         this.enabled = true
         this.mode = this.held ? 'held' : 'returning'
     }
     clear() {
+        this.selected = false
         this.enabled = false
         this.mode = this.held ? 'held' : 'free'
     }
@@ -59,8 +62,8 @@ export class FocusOwnership {
         this.playing = playing
         if (!playing) this.mode = this.held ? 'held' : 'free'
         else if (began) {
-            this.enabled = true
-            this.mode = this.held ? 'held' : 'returning'
+            this.enabled = this.selected
+            this.mode = this.held ? 'held' : this.enabled ? 'returning' : 'free'
         }
     }
     start() {
