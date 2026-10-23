@@ -461,6 +461,16 @@ test('keyboard and accessibility audit', async ({ page }) => {
         .analyze()
     expect(paperGuide.violations).toEqual([])
     await page.getByRole('button', { name: 'Toggle theme' }).click()
+    // Audit the settled theme rather than a transitional background combined
+    // with its already-updated text color. Keep normal motion enabled.
+    await page.evaluate(async () => {
+        await Promise.all(
+            document
+                .getAnimations()
+                .filter((animation) => animation instanceof CSSTransition)
+                .map((animation) => animation.finished.catch(() => {})),
+        )
+    })
     const chalkboardGuide = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze()
